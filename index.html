@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PLS GROUP – Autoservis Bratislava | Servis, pneuservis, STK, odťah</title>
+<meta name="description" content="Autoservis v Bratislave – Vrakuni. Servis, diagnostika, pneuservis, výmena skiel, odťah, klimatizácia a príprava na STK/EK. Objednajte sa online.">
+<meta name="theme-color" content="#0d0f12">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="sk_SK">
+<meta property="og:title" content="PLS GROUP – Autoservis Bratislava">
+<meta property="og:description" content="Vstúpte do našej garáže a vyberte si službu. Online objednávka.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff5a1f'/%3E%3Ctext x='16' y='24' font-family='Arial Black,Arial' font-weight='900' font-size='22' text-anchor='middle' fill='%23121212'%3EP%3C/text%3E%3C/svg%3E">
+<script>document.documentElement.classList.add('js')</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"AutoRepair","name":"PLS GROUP s.r.o. – Autoslužby PLN","areaServed":"Bratislava","telephone":"+421902121221","address":{"@type":"PostalAddress","streetAddress":"Hradská 14269/25","postalCode":"821 07","addressLocality":"Bratislava – Vrakuňa","addressCountry":"SK"},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"08:00","closes":"16:00"}]}</script>
+<link rel="preload" href="fonts/BarlowCondensed-800-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/jsm/"}}</script>
+<noscript><style>.scene-wrap{display:none}.loader{display:none}</style></noscript>
+</head>
+<body>
+<a class="skip" href="#sluzby">Preskočiť na zoznam služieb</a>
+
+<header class="top"><div class="wrap"><nav aria-label="Hlavné menu">
+  <a class="logo" href="#" aria-label="PLS GROUP – hore"><i>P</i><span>PLS GROUP<small>AUTOSLUŽBY PLN</small></span></a>
+  <button class="burger" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+  <ul id="menu"><li><a href="#sluzby">Služby</a></li><li><a href="#postup">Ako to prebieha</a></li><li><a href="#preco">Prečo my</a></li><li><a href="#kontakt">Kontakt</a></li></ul>
+  <button class="btn o sm" type="button" data-book="servis">Objednať sa</button>
+</nav></div></header>
+
+<main id="main">
+
+<!-- ============ 3D scéna: vráta → garáž → auto → bublinky ============ -->
+<section class="scene-wrap" aria-label="Interaktívna prehliadka garáže. Skrolovaním vojdete dovnútra, bublinky pri aute otvárajú služby.">
+  <div class="scene">
+    <canvas id="gl" aria-hidden="true"></canvas>
+    <div class="loader" role="status"><div>Otváram garáž…<b></b></div></div>
+    <div class="bubbles"></div>
+    <div class="hud">
+      <div class="intro"><p class="t">PLS GROUP <em>·</em> Autoservis Bratislava</p><p class="s">Skrolujte a vojdite dnu</p><span class="arrow"></span></div>
+      <p class="hint" role="note">Kliknite na bublinu a uvidíte, čo robíme</p>
+      <div class="cta-bar"><button class="btn o" type="button" data-book="servis">Objednať sa online</button><a class="btn" href="#sluzby">Všetky služby</a></div>
+      <a class="skipscene" href="#sluzby">Preskočiť animáciu</a>
+    </div>
+  </div>
+</section>
+
+<section id="sluzby" class="sec services"><div class="wrap">
+  <div class="head">
+    <div><p class="eyebrow" style="margin-bottom:16px">Služby</p><h2>Na čo sa u nás<br>môžete spoľahnúť</h2></div>
+    <p>Kliknite na službu a uvidíte, čo všetko do nej patrí. Alebo sa rovno objednajte.</p>
+  </div>
+  <ul class="cards" id="cards"></ul>
+  <noscript><p style="margin-top:30px;font-size:20px">Pre zobrazenie služieb je potrebný JavaScript. Zavolajte nám na <a href="tel:+421902121221">0902 121 221</a>.</p></noscript>
+</div></section>
+
+<section id="postup" class="sec process"><div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap">
+    <div><p class="eyebrow" style="margin-bottom:16px">Postup</p><h2>Štyri kroky,<br>žiadne prekvapenia</h2></div>
+    <button class="btn line" type="button" data-book="servis">Dohodnúť termín</button>
+  </div>
+  <div class="steps">
+    <div class="step"><b>1</b><h3>Objednáte sa</h3><p>Cez bublinku pri aute alebo telefonicky. Povedzte, čo auto robí.</p></div>
+    <div class="step"><b>2</b><h3>Prehliadka</h3><p>Pozrieme sa na auto a zistíme, čo je nutné riešiť hneď a čo môže počkať.</p></div>
+    <div class="step"><b>3</b><h3>Cena vopred</h3><p>Dostanete rozsah práce a cenu. Bez vášho súhlasu nič nerobíme.</p></div>
+    <div class="step"><b>4</b><h3>Oprava a odovzdanie</h3><p>Opravíme, otestujeme a vysvetlíme, čo sa urobilo. Staré diely vám radi ukážeme.</p></div>
+  </div>
+</div></section>
+
+<section id="preco" class="sec why" style="padding-top:0"><div class="wrap"><div class="grid">
+  <div><p class="eyebrow" style="margin-bottom:16px">Prečo PLS GROUP</p><h2>Auto je pre vás dôležité. Robíme veci poriadne.</h2></div>
+  <dl>
+    <div><dt>Transparentnosť</dt><dd>Cenu a rozsah opravy poznáte ešte pred začatím práce.</dd></div>
+    <div><dt>Kvalitné diely</dt><dd>Originálne aj overené náhradné diely, podľa vašej voľby a rozpočtu.</dd></div>
+    <div><dt>Dodržané termíny</dt><dd>Povieme vám, kedy bude auto hotové, a držíme sa toho.</dd></div>
+    <div><dt>Úprimná rada</dt><dd>Poradíme, čo je nutné riešiť hneď a čo môže počkať.</dd></div>
+  </dl>
+</div></div></section>
+
+<section id="kontakt" class="sec contact"><div class="wrap">
+  <p class="eyebrow" style="margin-bottom:16px">Kontakt</p>
+  <h2>Zavolajte, zastavte sa alebo sa objednajte</h2>
+  <div class="grid">
+    <div class="info">
+      <div class="row"><small>Firma</small><b><span data-co="name"></span> – <span data-co="brand"></span></b></div>
+      <div class="row"><small>Adresa</small><b data-co="address"></b></div>
+      <div class="row"><small>Telefón</small><b><a data-co-href="phoneHref" data-co-prefix="tel:" href="tel:+421902121221" data-co="phone"></a></b></div>
+      <div class="row" style="border-bottom:0"><small>Otváracie hodiny</small><ul class="hours"><li><span>Pondelok</span><b>8:00–16:00</b></li><li><span>Utorok</span><b>8:00–16:00</b></li><li><span>Streda</span><b>8:00–16:00</b></li><li><span>Štvrtok</span><b>8:00–16:00</b></li><li><span>Piatok</span><b>8:00–16:00</b></li><li><span>Sobota</span><b>Zatvorené</b></li><li><span>Nedeľa</span><b>Zatvorené</b></li></ul></div>
+      <div class="acts">
+        <button class="btn o" type="button" data-book="servis">Objednať sa online</button>
+        <a class="btn" href="https://www.google.com/maps/search/?api=1&query=Hrads%C3%A1%2014269%2F25%2C%20821%2007%20Bratislava" target="_blank" rel="noopener noreferrer">Navigovať v Mapách</a>
+      </div>
+    </div>
+    <div class="map" id="map"><div class="gate" id="map-gate">
+      <h3 style="font-size:28px">Mapa</h3>
+      <p>Mapu poskytuje Google. Po kliknutí sa pripojíte k serverom Google a môžu sa uložiť cookies tretej strany. Viac v <a href="cookies.html">zásadách cookies</a>.</p>
+      <button class="btn" type="button" id="map-ok">Zobraziť mapu</button>
+    </div></div>
+  </div>
+</div></section>
+
+</main>
+
+<footer><div class="wrap">
+  <div class="col"><b data-co="name"></b><span data-co="address"></span><span>IČO: <span data-co="ico"></span> · DIČ: <span data-co="dic"></span></span><span>IČ DPH: <span data-co="icdph"></span></span><span data-co="register"></span></div>
+  <div class="col"><b>Informácie</b><a href="zasady-ochrany-osobnych-udajov.html">Ochrana osobných údajov</a><a href="cookies.html">Cookies</a><a href="informacie-pre-spotrebitela.html">Informácie pre spotrebiteľa a reklamácie</a></div>
+  <div class="col"><b>Kontakt</b><a data-co-href="phoneHref" data-co-prefix="tel:" href="tel:+421902121221" data-co="phone"></a><span>Po – Pi 8:00 – 16:00</span></div>
+  <p class="small">© <span id="y"></span> <span data-co="name"></span> Všetky práva vyhradené. Fotografie v zozname služieb: Unsplash (ukážkové). 3D model garáže a auta: vlastná tvorba.</p>
+</div></footer>
+
+<dialog id="svc-dlg" aria-modal="true"></dialog>
+<dialog id="book-dlg" aria-modal="true"></dialog>
+
+<script src="js/config.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
