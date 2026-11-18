@@ -180,6 +180,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     pause: () => { running = false; },
     resume: () => { running = true; kick(); },
     kick,
+    debug: { THREE, camera, car, door, root, scene },
   };
 }
 
