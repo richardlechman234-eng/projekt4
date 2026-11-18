@@ -22,12 +22,13 @@ const toThree = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // Blender → thr
 
 export async function createScene({ canvas, bubblesEl, onBubble, onProgress, reduced }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x10141a);
@@ -67,13 +68,14 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   scene.add(root);
   root.traverse((o) => {
     if (o.isMesh) {
-      o.castShadow = !/Wall|Ceiling|Ground|Floor|Apron|Led/.test(o.name);
+      o.castShadow = false;
       o.receiveShadow = true;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
       mats.forEach((m) => { if (m && "envMapIntensity" in m) m.envMapIntensity = /CarPaint|Glass|Chrome|Rim/.test(m.name) ? 1.0 : 0.35; });
     }
   });
   const car = root.getObjectByName("Car");
+  car.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   const door = root.getObjectByName("Door");
 
   // logo na vrátach (canvas textúra)
@@ -117,9 +119,15 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     baseFov = camera.aspect < 0.9 ? 58 : camera.aspect < 1.3 ? 50 : 42;
   }
 
+  let last = performance.now(), slow = 0, dpr = Math.min(window.devicePixelRatio || 1, 1.5), lastYaw = null;
   function frame() {
-    cur += (target - cur) * (reduced ? 1 : 0.1);
-    if (Math.abs(target - cur) < 0.0002) cur = target;
+    const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    // plynulé dobiehanie podľa času (nezávislé od FPS)
+    cur += (target - cur) * (reduced ? 1 : 1 - Math.exp(-dt * 7));
+    if (Math.abs(target - cur) < 0.0004) cur = target;
+    // slabý výkon → nižšie rozlíšenie
+    if (dt > 0.045) { if (++slow > 20 && dpr > 1) { dpr = 1; renderer.setPixelRatio(dpr); renderer.setSize(W, H, false); } } else slow = Math.max(0, slow - 1);
     const p = cur;
     // vráta: rolovacie, zbalia sa nahor
     const open = smooth(0.03, 0.27, p);
@@ -127,6 +135,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     door.visible = open < 0.995;
     // otočenie auta predok → bok
     car.rotation.y = YAW_END * smooth(0.58, 0.97, p);
+    if (car.rotation.y !== lastYaw) { renderer.shadowMap.needsUpdate = true; lastYaw = car.rotation.y; }
 
     pose(p);
     // pri úzkych displejoch kameru trochu odsunieme od cieľa
@@ -168,7 +177,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
   let running = true;
   let loopId = 0;
-  const kick = () => { if (!loopId) loopId = requestAnimationFrame(function tick() { loopId = 0; if (running) { frame(); if (Math.abs(target - cur) > 0.0004 || !reduced) loopId = requestAnimationFrame(tick); } }); };
+  const kick = () => { if (!loopId) { last = performance.now(); loopId = requestAnimationFrame(function tick() { loopId = 0; if (running) { frame(); if (target !== cur) loopId = requestAnimationFrame(tick); } }); } };
 
   resize();
   new ResizeObserver(() => { resize(); kick(); }).observe(canvas);
@@ -180,7 +189,6 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     pause: () => { running = false; },
     resume: () => { running = true; kick(); },
     kick,
-    debug: { THREE, camera, car, door, root, scene },
   };
 }
 
