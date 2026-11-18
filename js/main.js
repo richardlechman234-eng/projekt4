@@ -8,7 +8,7 @@ if (reduced) document.documentElement.classList.add("reduced");
 
 const wrap = document.querySelector(".scene-wrap");
 const loader = document.querySelector(".loader");
-const intro = document.querySelector(".intro");
+const intro = document.querySelector(".hero-intro");
 const hint = document.querySelector(".hint");
 const cta = document.querySelector(".cta-bar");
 
@@ -28,7 +28,7 @@ if (!webgl()) {
       reduced,
       onProgress: (p) => {
         intro.style.opacity = String(1 - Math.min(1, p / 0.1));
-        hint.classList.toggle("on", p > 0.5 && p < 0.9);
+        hint.classList.toggle("on", p > 0.5 && p < 0.88);
         cta.classList.toggle("on", p > 0.9);
       },
     });
