@@ -10,12 +10,12 @@ const lerp = (a, b, t) => a + (b - a) * t;
 // Kľúčové zábery kamery podľa postupu scrollu (0 → 1). Súradnice: x doprava, y hore, z k ulici.
 // Garáž: vnútro z ∈ [-3.1, 3.1], vráta v z ≈ 3.34, auto v strede, nos smerom k vrátam (+z).
 const KEYS = [
-  { p: 0.00, pos: [0, 1.25, 12.8], tgt: [0, 1.35, 3.3] },
-  { p: 0.30, pos: [0, 1.30, 9.2], tgt: [0, 1.0, 2.0] },
-  { p: 0.47, pos: [0, 1.30, 5.0], tgt: [0, 0.80, 1.0] },
-  { p: 0.58, pos: [0, 1.30, 5.0], tgt: [0, 0.80, 1.0] },
-  { p: 0.70, pos: [-0.9, 1.35, 3.65], tgt: [0, 0.80, 0.4] },
-  { p: 1.00, pos: [-2.62, 1.50, 2.82], tgt: [0.15, 0.62, -0.1] },
+  { p: 0.00, pos: [0, 1.25, 12.8], tgt: [0, 1.35, 3.3], fov: 0 },
+  { p: 0.30, pos: [0, 1.30, 9.2], tgt: [0, 1.0, 2.0], fov: 0 },
+  { p: 0.47, pos: [0, 1.30, 5.0], tgt: [0, 0.80, 1.0], fov: 0 },
+  { p: 0.58, pos: [0, 1.30, 5.0], tgt: [0, 0.80, 1.0], fov: 0 },
+  { p: 0.70, pos: [-0.8, 1.35, 3.65], tgt: [0, 0.80, 0.4], fov: 6 },
+  { p: 1.00, pos: [-2.15, 1.45, 2.95], tgt: [0.35, 0.60, -0.3], fov: 20 },
 ];
 const YAW_END = -1.31;      // ~ -75° → auto otočené bokom (pravý bok ku kamere)
 const toThree = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // Blender → three
@@ -53,16 +53,16 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   spot.shadow.mapSize.set(1024, 1024);
   spot.shadow.bias = -0.0004;
   scene.add(spot, spot.target);
-  const sun = new THREE.DirectionalLight(0xdfe8ff, 1.5);
+  const sun = new THREE.DirectionalLight(0xdfe8ff, 0.7);
   sun.position.set(-5, 7, 14);
   scene.add(sun);
-  const facadeLamp = new THREE.SpotLight(0xffe6c8, 220, 20, 0.7, 0.7, 1.6);
+  const facadeLamp = new THREE.SpotLight(0xffe6c8, 70, 20, 0.7, 0.8, 1.6);
   facadeLamp.position.set(2.5, 4.4, 9.5);
   facadeLamp.target.position.set(0, 1.4, 3.4);
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb");
+  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=2");
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {
@@ -98,12 +98,14 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   const setTarget = (p) => { target = reduced ? 1 : clamp(p); };
   const tmpP = new THREE.Vector3(), tmpT = new THREE.Vector3(), w = new THREE.Vector3(), nW = new THREE.Vector3(), q = new THREE.Quaternion();
 
+  let fovAdd = 0, baseFov = 42;
   function pose(p) {
     let i = 0;
     while (i < KEYS.length - 2 && p > KEYS[i + 1].p) i++;
     const a = KEYS[i], b = KEYS[i + 1];
     const t = smooth(0, 1, clamp((p - a.p) / (b.p - a.p)));
     tmpP.set(lerp(a.pos[0], b.pos[0], t), lerp(a.pos[1], b.pos[1], t), lerp(a.pos[2], b.pos[2], t));
+    fovAdd = lerp(a.fov, b.fov, t);
     tmpT.set(lerp(a.tgt[0], b.tgt[0], t), lerp(a.tgt[1], b.tgt[1], t), lerp(a.tgt[2], b.tgt[2], t));
   }
 
@@ -112,8 +114,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     W = canvas.clientWidth; H = canvas.clientHeight;
     renderer.setSize(W, H, false);
     camera.aspect = W / H;
-    camera.fov = camera.aspect < 0.9 ? 62 : camera.aspect < 1.3 ? 52 : 42;
-    camera.updateProjectionMatrix();
+    baseFov = camera.aspect < 0.9 ? 58 : camera.aspect < 1.3 ? 50 : 42;
   }
 
   function frame() {
@@ -133,6 +134,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
       tmpP.sub(tmpT).multiplyScalar(1.35).add(tmpT);
       tmpP.y += 0.25;
     }
+    camera.fov = baseFov + fovAdd * (camera.aspect < 0.9 ? 0.4 : 1);
+    camera.updateProjectionMatrix();
     camera.position.copy(tmpP);
     camera.lookAt(tmpT);
     camera.updateMatrixWorld();

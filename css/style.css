@@ -51,7 +51,7 @@ nav ul a:hover{background-size:100% 3px}
 .loader b:after{content:"";position:absolute;inset:0;width:40%;background:var(--o);animation:ld 1s ease-in-out infinite alternate}
 @keyframes ld{to{transform:translateX(150%)}}
 .hud{position:absolute;inset:0;pointer-events:none;z-index:3;color:var(--w)}
-.intro{position:absolute;left:50%;bottom:7vh;transform:translateX(-50%);text-align:center;transition:opacity .3s;width:min(92vw,560px)}
+.intro{position:absolute;left:50%;bottom:4vh;transform:translateX(-50%);text-align:center;transition:opacity .3s;width:min(92vw,560px)}
 .intro .t{font-family:var(--head);font-weight:800;font-size:clamp(26px,4vw,40px);letter-spacing:.04em;text-transform:uppercase;text-shadow:0 2px 18px rgba(0,0,0,.7)}
 .intro .t em{font-style:normal;color:var(--o)}
 .intro .s{margin-top:6px;opacity:.9;text-shadow:0 2px 12px rgba(0,0,0,.8);font-size:18px}
