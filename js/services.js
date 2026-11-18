@@ -10,7 +10,7 @@ export const SERVICES = [
     list: ["Výmena motorového oleja a olejového filtra", "Vzduchový, peľový a palivový filter", "Brzdové platničky, kotúče a brzdová kvapalina", "Rozvody (remeň alebo reťaz) a vodné čerpadlo", "Tlmiče, silentbloky a ďalšie časti podvozku", "Sviečky, chladiaca kvapalina, pravidelná prehliadka"],
     note: "Presný rozsah závisí od auta a najazdených kilometrov. Cenu dostanete vopred.",
     // bublina: pozícia na aute (x vpravo, y dopredu→dozadu, z hore; nos auta je v -y) a smer von z karosérie
-    anchor: [0.99, 0.15, 0.78], normal: [1, 0, 0.1]
+    anchor: [1.07, 0.25, 0.72], normal: [1, 0, 0.1]
   },
   {
     id: "diag", title: "Diagnostika", short: "Svieti kontrolka? Nájdeme príčinu, nehádame.",
@@ -19,7 +19,7 @@ export const SERVICES = [
     intro: "Chybový kód nie je diagnóza. Prístroj ukáže, kde hľadať, a zvyšok urobí skúsený technik.",
     list: ["Načítanie a vymazanie chybových kódov", "Kontrolka motora, ABS, airbagov či stabilizácie", "Kontrola senzorov a elektroniky", "Test batérie, štartéra a alternátora", "Skúšobná jazda pri nepravidelných poruchách", "Písomné zhrnutie, čo je zlé a čo s tým"],
     note: "Ak sa porucha dá opraviť u nás, povieme vám aj cenu opravy.",
-    anchor: [0.72, -2.2, 0.72], normal: [0.5, -1, 0.15]
+    anchor: [0.62, -2.28, 0.66], normal: [0.4, -1, 0.15]
   },
   {
     id: "pneu", title: "Pneuservis", short: "Prezutie, vyváženie, oprava a uskladnenie.",
@@ -28,7 +28,7 @@ export const SERVICES = [
     intro: "Dobré pneumatiky rozhodujú o brzdnej dráhe aj o spotrebe. Sezónne prezutie vybavíme rýchlo.",
     list: ["Výmena a prezutie pneumatík (plechové aj hliníkové disky)", "Vyváženie kolies", "Oprava defektu a kontrola ventilov", "Kontrola tlaku a stavu dezénu", "Uskladnenie sezónnych pneumatík", "Kontrola geometrie podvozku"],
     note: "V sezóne odporúčame termín rezervovať vopred.",
-    anchor: [1.05, -1.43, 0.36], normal: [1, 0, 0]
+    anchor: [1.1, -1.45, 0.36], normal: [1, 0, 0]
   },
   {
     id: "sklo", title: "Výmena skiel", short: "Čelné sklo, bočné a zadné sklá.",
@@ -37,7 +37,7 @@ export const SERVICES = [
     intro: "Prasknuté alebo poškodené sklo je bezpečnostné riziko. Vymeníme ho a auto pripravíme na cestu.",
     list: ["Výmena čelného skla", "Výmena bočných a zadných skiel", "Oprava nárazov a prasklín, ak je ešte možná", "Kalibrácia kamier a asistenčných systémov po výmene (podľa vozidla)", "Pomoc pri komunikácii s poisťovňou"],
     note: "Rozsah a cenu potvrdíme podľa typu vozidla. Radi vám ju povieme vopred.",
-    anchor: [0.0, -0.28, 1.3], normal: [0, -0.55, 1]
+    anchor: [0.0, -0.4, 1.12], normal: [0, -0.6, 1]
   },
   {
     id: "odtah", title: "Odťah", short: "Nepojazdné auto odtiahneme k nám do servisu.",
@@ -46,7 +46,7 @@ export const SERVICES = [
     intro: "Auto sa pokazilo a nepohne sa? Zavolajte, poradíme sa a pomôžeme s odvozom do servisu.",
     list: ["Odťah nepojazdného vozidla do servisu", "Preprava po poruche alebo nehode", "Poradenstvo cez telefón, čo robiť na mieste", "Nadväzná oprava priamo u nás"],
     note: "Podmienky a cenu odťahu dohodneme telefonicky podľa miesta a vzdialenosti.",
-    anchor: [0.92, -2.22, 0.55], normal: [1, -0.7, 0.05]
+    anchor: [0.98, -2.2, 0.36], normal: [1, -0.7, 0.05]
   },
   {
     id: "klima", title: "Klimatizácia", short: "V lete chladno, v zime bez zarosených okien.",
@@ -55,7 +55,7 @@ export const SERVICES = [
     intro: "Klimatizácia stráca chladivo aj bez poruchy. Raz za čas ju treba skontrolovať a vyčistiť.",
     list: ["Kontrola výkonu a tesnosti okruhu", "Doplnenie alebo výmena chladiva", "Čistenie a dezinfekcia výparníka a vetrania", "Výmena peľového filtra", "Kontrola kompresora a ventilátorov"],
     note: "Ak je v systéme netesnosť, najprv ju nájdeme, aby ste za chladivo neplatili dvakrát.",
-    anchor: [0.45, 0.55, 1.46], normal: [0.3, 0, 1]
+    anchor: [0.4, 0.45, 1.36], normal: [0.3, 0, 1]
   },
   {
     id: "stk", title: "Príprava na STK / EK", short: "Skontrolujeme to, čo kontroluje technik.",
@@ -64,7 +64,7 @@ export const SERVICES = [
     intro: "Aby ste na stanici nemuseli ísť druhýkrát. Prejdeme to, čo bude kontrolovať technik, a závady opravíme.",
     list: ["Brzdy: stav platničiek, kotúčov a účinnosť", "Svetlá, ich nastavenie a signalizácia", "Podvozok, riadenie a uloženie kolies", "Pneumatiky a hĺbka dezénu", "Výfuk a príprava na emisnú kontrolu", "Netesnosti kvapalín, stierače a výhľad", "Oprava zistených závad"],
     note: "Pripravené auto ešte nemá platnú kontrolu. Tú vydáva technická stanica.",
-    anchor: [0.62, 2.42, 0.9], normal: [0.4, 1, 0.1]
+    anchor: [0.8, 2.25, 0.82], normal: [0.4, 1, 0.1]
   },
   {
     id: "motor", title: "Motory a prevodovky", short: "Od netesností po väčšie opravy.",
@@ -73,7 +73,7 @@ export const SERVICES = [
     intro: "Väčšie opravy začíname prehliadkou. Dostanete jasný rozsah práce a cenu a môžete sa v pokoji rozhodnúť.",
     list: ["Hľadanie príčiny hluku, vibrácií alebo straty výkonu", "Opravy netesností (olej, chladiaca kvapalina)", "Výmena spojky a zotrvačníka", "Servis prevodovky a výmena prevodového oleja", "Opravy podľa rozsahu až po rozobratie jednotky"],
     note: "Pri náročnejších opravách vám ukážeme poškodené diely.",
-    anchor: [0.0, -1.35, 1.06], normal: [0, -0.3, 1]
+    anchor: [0.0, -1.55, 0.98], normal: [0, -0.3, 1]
   }
 ];
 

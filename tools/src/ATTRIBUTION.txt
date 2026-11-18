@@ -1,0 +1,7 @@
+bmw_m4_f82_razor.glb
+Title:   BMW M4 F82 Razor 2014 | www.vecarz.com
+Author:  vecarz (@heynic)
+Source:  https://sketchfab.com/3d-models/bmw-m4-f82-razor-2014-wwwvecarzcom-25d00f20b8cf4828bd934acb31e0aae4
+License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+Changes: removed leftover collision/shadow meshes, livery replaced with dark grey paint,
+         rescaled/rotated and merged into models/garage.glb (tools/build_scene.py).

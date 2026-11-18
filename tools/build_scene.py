@@ -272,204 +272,251 @@ for i, y in enumerate((-1.2, 0.0, 1.2)):
 # ------------------------------------------------------------------ CAR
 CAR = empty("Car", (0, 0.0, 0), G)
 
-def smooth_interp(table, ys, passes=3):
-    arr = np.array(table, dtype=float)
-    out = np.stack([np.interp(ys, arr[:, 0], arr[:, k]) for k in range(1, arr.shape[1])], axis=1)
-    for _ in range(passes):
-        out[1:-1] = 0.25 * out[:-2] + 0.5 * out[1:-1] + 0.25 * out[2:]
-    return out
+SRC_CAR = os.path.join(ROOT, "tools", "src", "bmw_m4_f82_razor.glb")
+CAR_LEN = 4.72
 
-def rounded_ring(zb, zt, hw, n=32, e=3.2, taper_top=0.82):
-    zc, hh = (zb + zt) / 2, (zt - zb) / 2
-    pts = []
-    for k in range(n):
-        a = 2 * math.pi * k / n
-        c, s = math.cos(a), math.sin(a)
-        x = hw * math.copysign(abs(c) ** (2 / e), c)
-        zz = hh * math.copysign(abs(s) ** (2 / e), s)
-        if zz > 0:
-            x *= 1 - (1 - taper_top) * (zz / hh) ** 2
-        pts.append(Vector((x, 0, zc + zz)))
-    return pts
+def import_car():
+    """BMW M4 F82 Razor 2014 by vecarz (Sketchfab, CC BY 4.0) – cleaned & repainted dark grey."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=SRC_CAR)
+    new = [o for o in bpy.data.objects if o not in before]
+    for o in list(new):
+        if o.type == "MESH" and ("dff" in o.name):
+            new.remove(o)
+            bpy.data.objects.remove(o, do_unlink=True)
+    paint = M["body"]
+    for o in new:
+        if o.type != "MESH":
+            continue
+        for slot in o.material_slots:
+            if slot.material and slot.material.name in ("chassis.009", "chassis.9", "chassis.013"):
+                slot.material = paint
+    bpy.context.view_layer.update()
+    mn = Vector((1e9,) * 3); mx = Vector((-1e9,) * 3)
+    for o in new:
+        if o.type == "MESH":
+            for v in o.bound_box:
+                w = o.matrix_world @ Vector(v)
+                mn = Vector(map(min, mn, w)); mx = Vector(map(max, mx, w))
+    size = mx - mn
+    s = CAR_LEN / size.y
+    holder = empty("CarModel", (0, 0, 0), CAR)
+    pivot = empty("CarModelPivot", (0, 0, 0), holder)
+    roots = [o for o in new if o.parent is None or o.parent not in new]
+    for o in roots:
+        mw = o.matrix_world.copy()
+        o.parent = pivot
+        o.matrix_parent_inverse = pivot.matrix_world.inverted()
+        o.matrix_world = mw
+    c = (mn + mx) / 2
+    pivot.location = (-c.x, -c.y, -mn.z)
+    holder.scale = (s, s, s)
+    holder.rotation_euler = (0, 0, math.pi)   # nos do -y (k vrátam)
+    bpy.context.view_layer.update()
+    print("CAR_DIMS", tuple(round(v * s, 3) for v in size))
 
-def loft(name, rings, ys, material, parent, cap=True, matfn=None, mats=None):
-    bm = bmesh.new()
-    R = []
-    for ring, y in zip(rings, ys):
-        R.append([bm.verts.new((p.x, y, p.z)) for p in ring])
-    n = len(R[0])
-    for i in range(len(R) - 1):
+if os.path.exists(SRC_CAR):
+    import_car()
+    WB_F, WB_R, WR, WX = -1.43, 1.43, 0.35, 0.82
+else:
+    def smooth_interp(table, ys, passes=3):
+        arr = np.array(table, dtype=float)
+        out = np.stack([np.interp(ys, arr[:, 0], arr[:, k]) for k in range(1, arr.shape[1])], axis=1)
+        for _ in range(passes):
+            out[1:-1] = 0.25 * out[:-2] + 0.5 * out[1:-1] + 0.25 * out[2:]
+        return out
+
+    def rounded_ring(zb, zt, hw, n=32, e=3.2, taper_top=0.82):
+        zc, hh = (zb + zt) / 2, (zt - zb) / 2
+        pts = []
         for k in range(n):
-            f = bm.faces.new((R[i][k], R[i][(k + 1) % n], R[i + 1][(k + 1) % n], R[i + 1][k]))
-            if matfn:
-                f.material_index = matfn(i, k, ys[i], ys[i + 1])
-    if cap:
-        for idx, ring in ((0, R[0]), (-1, R[-1])):
-            c = bm.verts.new((sum(v.co.x for v in ring) / n, ring[0].co.y, sum(v.co.z for v in ring) / n))
-            for k in range(n):
-                bm.faces.new((c, ring[(k + 1) % n], ring[k]) if idx == 0 else (c, ring[k], ring[(k + 1) % n]))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    o = from_bm(name, bm, None, parent, smooth=True)
-    for m in (mats or [material]):
-        o.data.materials.append(m)
-    return o
+            a = 2 * math.pi * k / n
+            c, s = math.cos(a), math.sin(a)
+            x = hw * math.copysign(abs(c) ** (2 / e), c)
+            zz = hh * math.copysign(abs(s) ** (2 / e), s)
+            if zz > 0:
+                x *= 1 - (1 - taper_top) * (zz / hh) ** 2
+            pts.append(Vector((x, 0, zc + zz)))
+        return pts
 
-# ---- lower body
-TABLE = [  # y, z_bot, z_top, half_width
-    (-2.40, 0.32, 0.64, 0.74),
-    (-2.36, 0.26, 0.72, 0.84),
-    (-2.18, 0.23, 0.81, 0.92),
-    (-1.80, 0.22, 0.88, 0.94),
-    (-1.20, 0.21, 0.97, 0.955),
-    (-0.50, 0.21, 1.02, 0.955),
-    (0.60, 0.21, 1.02, 0.955),
-    (1.50, 0.21, 1.05, 0.95),
-    (2.00, 0.23, 1.06, 0.93),
-    (2.30, 0.27, 1.02, 0.88),
-    (2.40, 0.36, 0.92, 0.80),
-]
-ys = np.linspace(-2.40, 2.40, 56)
-vals = smooth_interp(TABLE, ys, passes=3)
-rings = [rounded_ring(v[0], v[1], v[2], n=36, e=3.4, taper_top=0.80) for v in vals]
-body = loft("Body", rings, ys, M["body"], CAR)
-# wheel arches
-WB_F, WB_R, WR, WX = -1.43, 1.43, 0.35, 0.82
-cutters = []
-for sy in (WB_F, WB_R):
-    for sx in (-1, 1):
+    def loft(name, rings, ys, material, parent, cap=True, matfn=None, mats=None):
         bm = bmesh.new()
-        bmesh.ops.create_cone(bm, cap_ends=True, segments=40, radius1=0.435, radius2=0.435, depth=0.62)
-        c = from_bm("cut", bm, M["black"], None, smooth=False)
-        c.rotation_euler = (0, math.pi / 2, 0)
-        c.location = (sx * (0.54 + 0.31), sy, WR + 0.0)
-        c.parent = CAR
-        cutters.append(c)
-bpy.context.view_layer.objects.active = body
-for c in cutters:
-    md = body.modifiers.new("arch", "BOOLEAN")
-    md.operation = "DIFFERENCE"
-    md.object = c
-    try:
-        md.solver = "EXACT"
-    except Exception:
-        pass
-    try:
-        md.material_mode = "TRANSFER"
-    except Exception:
-        pass
-apply_modifiers(body)
-for c in cutters:
-    bpy.data.objects.remove(c, do_unlink=True)
+        R = []
+        for ring, y in zip(rings, ys):
+            R.append([bm.verts.new((p.x, y, p.z)) for p in ring])
+        n = len(R[0])
+        for i in range(len(R) - 1):
+            for k in range(n):
+                f = bm.faces.new((R[i][k], R[i][(k + 1) % n], R[i + 1][(k + 1) % n], R[i + 1][k]))
+                if matfn:
+                    f.material_index = matfn(i, k, ys[i], ys[i + 1])
+        if cap:
+            for idx, ring in ((0, R[0]), (-1, R[-1])):
+                c = bm.verts.new((sum(v.co.x for v in ring) / n, ring[0].co.y, sum(v.co.z for v in ring) / n))
+                for k in range(n):
+                    bm.faces.new((c, ring[(k + 1) % n], ring[k]) if idx == 0 else (c, ring[k], ring[(k + 1) % n]))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        o = from_bm(name, bm, None, parent, smooth=True)
+        for m in (mats or [material]):
+            o.data.materials.append(m)
+        return o
 
-# ---- greenhouse
-CAB = [  # y, height above beltline
-    (-0.64, 0.0), (-0.52, 0.07), (-0.22, 0.22), (0.20, 0.355), (0.60, 0.405), (1.00, 0.395),
-    (1.30, 0.33), (1.60, 0.20), (1.80, 0.07), (1.92, 0.0),
-]
-cy = np.linspace(-0.64, 1.92, 46)
-cv = smooth_interp(CAB, cy, passes=3)[:, 0]
-ZB = 0.995
-WB, WT = 0.80, 0.585
-def cab_ring(h):
-    s = min(1.0, h / 0.28)
-    wb = WB
-    wt = WB - (WB - WT) * s
-    wm = (wb + wt) / 2 + 0.035
-    z0, z1 = ZB - 0.04, ZB + h
-    return [Vector(p) for p in (
-        (-wb, 0, z0), (-wb, 0, ZB), (-wm, 0, ZB + h * 0.5), (-wt, 0, z1),
-        (-wt * 0.5, 0, z1 + 0.012), (0, 0, z1 + 0.018), (wt * 0.5, 0, z1 + 0.012),
-        (wt, 0, z1), (wm, 0, ZB + h * 0.5), (wb, 0, ZB), (wb, 0, z0)
-    )]
-cab_rings = [cab_ring(max(h, 0.0005)) for h in cv]
-mats_c = [M["body"], M["glass"]]
-def cab_mat(i, k, y0, y1):
-    ym = (y0 + y1) / 2
-    # ring segments: 0:(-wb,z0)->(-wb,ZB) skirt, 1: lower side, 2: upper side, 3..6 roof, 7: upper side R, 8 lower side R, 9 skirt R, 10 bottom
-    side = k in (1, 2, 7, 8)
-    roof = k in (3, 4, 5, 6)
-    if side:
-        if -0.40 < ym < 0.47 or 0.60 < ym < 1.42:
-            return 1 if k in (2, 7) or k in (1, 8) else 0
+    # ---- lower body
+    TABLE = [  # y, z_bot, z_top, half_width
+        (-2.40, 0.32, 0.64, 0.74),
+        (-2.36, 0.26, 0.72, 0.84),
+        (-2.18, 0.23, 0.81, 0.92),
+        (-1.80, 0.22, 0.88, 0.94),
+        (-1.20, 0.21, 0.97, 0.955),
+        (-0.50, 0.21, 1.02, 0.955),
+        (0.60, 0.21, 1.02, 0.955),
+        (1.50, 0.21, 1.05, 0.95),
+        (2.00, 0.23, 1.06, 0.93),
+        (2.30, 0.27, 1.02, 0.88),
+        (2.40, 0.36, 0.92, 0.80),
+    ]
+    ys = np.linspace(-2.40, 2.40, 56)
+    vals = smooth_interp(TABLE, ys, passes=3)
+    rings = [rounded_ring(v[0], v[1], v[2], n=36, e=3.4, taper_top=0.80) for v in vals]
+    body = loft("Body", rings, ys, M["body"], CAR)
+    # wheel arches
+    WB_F, WB_R, WR, WX = -1.43, 1.43, 0.35, 0.82
+    cutters = []
+    for sy in (WB_F, WB_R):
+        for sx in (-1, 1):
+            bm = bmesh.new()
+            bmesh.ops.create_cone(bm, cap_ends=True, segments=40, radius1=0.435, radius2=0.435, depth=0.62)
+            c = from_bm("cut", bm, M["black"], None, smooth=False)
+            c.rotation_euler = (0, math.pi / 2, 0)
+            c.location = (sx * (0.54 + 0.31), sy, WR + 0.0)
+            c.parent = CAR
+            cutters.append(c)
+    bpy.context.view_layer.objects.active = body
+    for c in cutters:
+        md = body.modifiers.new("arch", "BOOLEAN")
+        md.operation = "DIFFERENCE"
+        md.object = c
+        try:
+            md.solver = "EXACT"
+        except Exception:
+            pass
+        try:
+            md.material_mode = "TRANSFER"
+        except Exception:
+            pass
+    apply_modifiers(body)
+    for c in cutters:
+        bpy.data.objects.remove(c, do_unlink=True)
+
+    # ---- greenhouse
+    CAB = [  # y, height above beltline
+        (-0.64, 0.0), (-0.52, 0.07), (-0.22, 0.22), (0.20, 0.355), (0.60, 0.405), (1.00, 0.395),
+        (1.30, 0.33), (1.60, 0.20), (1.80, 0.07), (1.92, 0.0),
+    ]
+    cy = np.linspace(-0.64, 1.92, 46)
+    cv = smooth_interp(CAB, cy, passes=3)[:, 0]
+    ZB = 0.995
+    WB, WT = 0.80, 0.585
+    def cab_ring(h):
+        s = min(1.0, h / 0.28)
+        wb = WB
+        wt = WB - (WB - WT) * s
+        wm = (wb + wt) / 2 + 0.035
+        z0, z1 = ZB - 0.04, ZB + h
+        return [Vector(p) for p in (
+            (-wb, 0, z0), (-wb, 0, ZB), (-wm, 0, ZB + h * 0.5), (-wt, 0, z1),
+            (-wt * 0.5, 0, z1 + 0.012), (0, 0, z1 + 0.018), (wt * 0.5, 0, z1 + 0.012),
+            (wt, 0, z1), (wm, 0, ZB + h * 0.5), (wb, 0, ZB), (wb, 0, z0)
+        )]
+    cab_rings = [cab_ring(max(h, 0.0005)) for h in cv]
+    mats_c = [M["body"], M["glass"]]
+    def cab_mat(i, k, y0, y1):
+        ym = (y0 + y1) / 2
+        # ring segments: 0:(-wb,z0)->(-wb,ZB) skirt, 1: lower side, 2: upper side, 3..6 roof, 7: upper side R, 8 lower side R, 9 skirt R, 10 bottom
+        side = k in (1, 2, 7, 8)
+        roof = k in (3, 4, 5, 6)
+        if side:
+            if -0.40 < ym < 0.47 or 0.60 < ym < 1.42:
+                return 1 if k in (2, 7) or k in (1, 8) else 0
+            return 0
+        if roof:
+            if ym < 0.02 or ym > 1.12:
+                return 1
+            return 0
         return 0
-    if roof:
-        if ym < 0.02 or ym > 1.12:
-            return 1
-        return 0
-    return 0
-cabin = loft("Cabin", cab_rings, cy, M["body"], CAR, matfn=cab_mat, mats=mats_c)
+    cabin = loft("Cabin", cab_rings, cy, M["body"], CAR, matfn=cab_mat, mats=mats_c)
 
-# ---- details
-def part(name, size, loc, material, bevel=0.01, rot=(0, 0, 0)):
-    return box(name, size, loc, material, CAR, bevel=bevel, rot=rot)
+    # ---- details
+    def part(name, size, loc, material, bevel=0.01, rot=(0, 0, 0)):
+        return box(name, size, loc, material, CAR, bevel=bevel, rot=rot)
 
-# kidney grille (two big openings, M-style)
-for sx in (-1, 1):
-    part("KidneyFrame", (0.40, 0.045, 0.30), (sx * 0.215, -2.372, 0.50), M["chrome"], 0.03)
-    part("Kidney", (0.34, 0.05, 0.24), (sx * 0.215, -2.39, 0.50), M["black"], 0.02)
-    for i in range(6):
-        part("KidneySlat", (0.30, 0.02, 0.012), (sx * 0.215, -2.405, 0.40 + i * 0.04), M["chrome"], 0.004)
-part("IntakeLower", (1.30, 0.05, 0.14), (0, -2.36, 0.33), M["black"], 0.03)
-part("Splitter", (1.5, 0.08, 0.02), (0, -2.34, 0.245), M["black"], 0.005)
-for sx in (-1, 1):
-    part("IntakeSide", (0.30, 0.05, 0.14), (sx * 0.78, -2.27, 0.36), M["black"], 0.03)
-    # headlights: dark housing + slim light bar
-    part("Headlight", (0.40, 0.04, 0.07), (sx * 0.74, -2.15, 0.70), M["black"], 0.02, rot=(0, 0, sx * 0.30))
-    part("DRL", (0.32, 0.02, 0.014), (sx * 0.74, -2.175, 0.705), M["lamp"], 0.004, rot=(0, 0, sx * 0.30))
-    # mirrors
-    part("Mirror", (0.20, 0.12, 0.09), (sx * 0.98, -0.52, 1.05), M["body"], 0.03)
-    # side skirts
-    part("Skirt", (0.04, 2.1, 0.07), (sx * 0.958, 0.0, 0.285), M["black"], 0.01)
-    # M stripes on front fender
-    for i, mm in enumerate((M["mb"], M["md"], M["mr"])):
-        part("MStripe", (0.012, 0.045, 0.045), (sx * 0.968, -1.05 + i * 0.05, 0.86), mm, 0.002)
-    # door handles
-    part("Handle", (0.01, 0.16, 0.025), (sx * 0.963, 0.1, 0.93), M["black"], 0.004)
-    part("Handle2", (0.01, 0.16, 0.025), (sx * 0.955, 1.0, 0.93), M["black"], 0.004)
-    # tail lights
-    part("Taillight", (0.46, 0.05, 0.10), (sx * 0.62, 2.405, 0.89), M["tail"], 0.02, rot=(0, 0, -sx * 0.12))
-    # quad exhaust
-for sx in (-1, 1):
-    for dx in (0.22, 0.46):
-        cyl("Exhaust", 0.055, 0.12, (sx * dx + sx * 0.0, 2.44, 0.31), M["chrome"], CAR, axis="Y", verts=20)
-        cyl("ExhaustIn", 0.043, 0.13, (sx * dx, 2.445, 0.31), M["black"], CAR, axis="Y", verts=20)
-part("Diffuser", (1.25, 0.09, 0.16), (0, 2.37, 0.38), M["black"], 0.02)
-part("TrunkLip", (1.30, 0.12, 0.04), (0, 2.22, 1.075), M["body"], 0.015)
-part("RearBumperLow", (1.6, 0.08, 0.05), (0, 2.36, 0.27), M["black"], 0.01)
-# plates (EU-style)
-part("PlateF", (0.52, 0.015, 0.11), (0, -2.43, 0.26), M["plate"], 0.004)
-part("PlateR", (0.52, 0.015, 0.11), (0, 2.435, 0.60), M["plate"], 0.004)
-# hood power-dome lines
-for sx in (-1, 1):
-    part("HoodLine", (0.012, 1.3, 0.008), (sx * 0.30, -1.35, 1.012), M["black"], 0.002, rot=(0.02, 0, 0))
-# roof antenna fin
-part("Fin", (0.05, 0.12, 0.03), (0, 1.42, 1.37), M["black"], 0.01)
+    # kidney grille (two big openings, M-style)
+    for sx in (-1, 1):
+        part("KidneyFrame", (0.40, 0.045, 0.30), (sx * 0.215, -2.372, 0.50), M["chrome"], 0.03)
+        part("Kidney", (0.34, 0.05, 0.24), (sx * 0.215, -2.39, 0.50), M["black"], 0.02)
+        for i in range(6):
+            part("KidneySlat", (0.30, 0.02, 0.012), (sx * 0.215, -2.405, 0.40 + i * 0.04), M["chrome"], 0.004)
+    part("IntakeLower", (1.30, 0.05, 0.14), (0, -2.36, 0.33), M["black"], 0.03)
+    part("Splitter", (1.5, 0.08, 0.02), (0, -2.34, 0.245), M["black"], 0.005)
+    for sx in (-1, 1):
+        part("IntakeSide", (0.30, 0.05, 0.14), (sx * 0.78, -2.27, 0.36), M["black"], 0.03)
+        # headlights: dark housing + slim light bar
+        part("Headlight", (0.40, 0.04, 0.07), (sx * 0.74, -2.15, 0.70), M["black"], 0.02, rot=(0, 0, sx * 0.30))
+        part("DRL", (0.32, 0.02, 0.014), (sx * 0.74, -2.175, 0.705), M["lamp"], 0.004, rot=(0, 0, sx * 0.30))
+        # mirrors
+        part("Mirror", (0.20, 0.12, 0.09), (sx * 0.98, -0.52, 1.05), M["body"], 0.03)
+        # side skirts
+        part("Skirt", (0.04, 2.1, 0.07), (sx * 0.958, 0.0, 0.285), M["black"], 0.01)
+        # M stripes on front fender
+        for i, mm in enumerate((M["mb"], M["md"], M["mr"])):
+            part("MStripe", (0.012, 0.045, 0.045), (sx * 0.968, -1.05 + i * 0.05, 0.86), mm, 0.002)
+        # door handles
+        part("Handle", (0.01, 0.16, 0.025), (sx * 0.963, 0.1, 0.93), M["black"], 0.004)
+        part("Handle2", (0.01, 0.16, 0.025), (sx * 0.955, 1.0, 0.93), M["black"], 0.004)
+        # tail lights
+        part("Taillight", (0.46, 0.05, 0.10), (sx * 0.62, 2.405, 0.89), M["tail"], 0.02, rot=(0, 0, -sx * 0.12))
+        # quad exhaust
+    for sx in (-1, 1):
+        for dx in (0.22, 0.46):
+            cyl("Exhaust", 0.055, 0.12, (sx * dx + sx * 0.0, 2.44, 0.31), M["chrome"], CAR, axis="Y", verts=20)
+            cyl("ExhaustIn", 0.043, 0.13, (sx * dx, 2.445, 0.31), M["black"], CAR, axis="Y", verts=20)
+    part("Diffuser", (1.25, 0.09, 0.16), (0, 2.37, 0.38), M["black"], 0.02)
+    part("TrunkLip", (1.30, 0.12, 0.04), (0, 2.22, 1.075), M["body"], 0.015)
+    part("RearBumperLow", (1.6, 0.08, 0.05), (0, 2.36, 0.27), M["black"], 0.01)
+    # plates (EU-style)
+    part("PlateF", (0.52, 0.015, 0.11), (0, -2.43, 0.26), M["plate"], 0.004)
+    part("PlateR", (0.52, 0.015, 0.11), (0, 2.435, 0.60), M["plate"], 0.004)
+    # hood power-dome lines
+    for sx in (-1, 1):
+        part("HoodLine", (0.012, 1.3, 0.008), (sx * 0.30, -1.35, 1.012), M["black"], 0.002, rot=(0.02, 0, 0))
+    # roof antenna fin
+    part("Fin", (0.05, 0.12, 0.03), (0, 1.42, 1.37), M["black"], 0.01)
 
-# ---- wheels
-def wheel(name, loc, side):
-    g = empty(name, loc, CAR)
-    s = side
-    # tyre
-    t = tire(name + "_tyre", (0, 0, 0), g, r=WR, w=0.27, axis="X", rim=False)
-    # rim face (5 double spokes), disc, caliper
-    cyl(name + "_barrel", 0.245, 0.22, (0, 0, 0), M["rimDark"], g, axis="X", verts=36)
-    face = empty(name + "_face", (s * 0.105, 0, 0), g)
-    cyl(name + "_hub", 0.05, 0.03, (0, 0, 0), M["rim"], face, axis="X", verts=18)
-    for i in range(10):
-        a = 2 * math.pi * i / 10 + (0.0 if i % 2 == 0 else 0.0)
-        r0 = 0.145
-        b = box(name + "_spoke", (0.025, 0.026, 0.19), (0, 0, 0), M["rim"], face, bevel=0.004)
-        b.location = (0, math.cos(a) * r0, math.sin(a) * r0)
-        b.rotation_euler = (a - math.pi / 2 + (0.18 if i % 2 else -0.18), 0, 0)
-    cyl(name + "_lip", 0.255, 0.03, (s * 0.115, 0, 0), M["rim"], g, axis="X", verts=36, caps=False)
-    cyl(name + "_disc", 0.215, 0.03, (s * -0.02, 0, 0), M["disc"], g, axis="X", verts=36)
-    box(name + "_caliper", (0.07, 0.11, 0.17), (s * 0.04, 0.0 if True else 0, 0.14), M["caliper"], g, bevel=0.02)
-    return g
+    # ---- wheels
+    def wheel(name, loc, side):
+        g = empty(name, loc, CAR)
+        s = side
+        # tyre
+        t = tire(name + "_tyre", (0, 0, 0), g, r=WR, w=0.27, axis="X", rim=False)
+        # rim face (5 double spokes), disc, caliper
+        cyl(name + "_barrel", 0.245, 0.22, (0, 0, 0), M["rimDark"], g, axis="X", verts=36)
+        face = empty(name + "_face", (s * 0.105, 0, 0), g)
+        cyl(name + "_hub", 0.05, 0.03, (0, 0, 0), M["rim"], face, axis="X", verts=18)
+        for i in range(10):
+            a = 2 * math.pi * i / 10 + (0.0 if i % 2 == 0 else 0.0)
+            r0 = 0.145
+            b = box(name + "_spoke", (0.025, 0.026, 0.19), (0, 0, 0), M["rim"], face, bevel=0.004)
+            b.location = (0, math.cos(a) * r0, math.sin(a) * r0)
+            b.rotation_euler = (a - math.pi / 2 + (0.18 if i % 2 else -0.18), 0, 0)
+        cyl(name + "_lip", 0.255, 0.03, (s * 0.115, 0, 0), M["rim"], g, axis="X", verts=36, caps=False)
+        cyl(name + "_disc", 0.215, 0.03, (s * -0.02, 0, 0), M["disc"], g, axis="X", verts=36)
+        box(name + "_caliper", (0.07, 0.11, 0.17), (s * 0.04, 0.0 if True else 0, 0.14), M["caliper"], g, bevel=0.02)
+        return g
 
-for nm, y in (("F", WB_F), ("R", WB_R)):
-    wheel(f"Wheel{nm}L", (-WX, y, WR), -1)
-    wheel(f"Wheel{nm}R", (WX, y, WR), 1)
-    # wheel tubs rendered via transferred boolean material
+    for nm, y in (("F", WB_F), ("R", WB_R)):
+        wheel(f"Wheel{nm}L", (-WX, y, WR), -1)
+        wheel(f"Wheel{nm}R", (WX, y, WR), 1)
+        # wheel tubs rendered via transferred boolean material
 
 # ------------------------------------------------------------------ export
 bpy.ops.object.select_all(action="DESELECT")
