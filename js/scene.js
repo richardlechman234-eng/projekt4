@@ -18,6 +18,14 @@ const KEYS = [
   { p: 0.70, pos: [1.4, 1.55, 4.6], tgt: [0, 0.80, 0.3], fov: 6 },
   { p: 1.00, pos: [3.05, 1.70, 3.5], tgt: [-0.45, 0.60, -0.45], fov: 14 },
 ];
+// na výšku (mobil): kamera ostáva vnútri garáže, auto vidno šikmo zhora
+const KEYS_PORTRAIT = [
+  KEYS[0], KEYS[1],
+  { p: 0.47, pos: [1.9, 2.25, 3.75], tgt: [0, 0.45, 0.35], fov: 0 },
+  { p: 0.58, pos: [1.9, 2.25, 3.75], tgt: [0, 0.45, 0.35], fov: 0 },
+  { p: 0.70, pos: [2.9, 2.0, 2.7], tgt: [0, 0.5, 0], fov: 0 },
+  { p: 1.00, pos: [3.3, 2.05, 2.3], tgt: [-0.3, 0.5, -0.5], fov: 0 },
+];
 const YAW_END = -1.95;      // ~ -112° → bok + zadná tretina (výfuk) ku kamere
 const toThree = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // Blender → three
 
@@ -105,9 +113,10 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
   let fovAdd = 0, baseFov = 42;
   function pose(p) {
+    const KEYS_ = camera.aspect < 0.9 ? KEYS_PORTRAIT : KEYS;
     let i = 0;
-    while (i < KEYS.length - 2 && p > KEYS[i + 1].p) i++;
-    const a = KEYS[i], b = KEYS[i + 1];
+    while (i < KEYS_.length - 2 && p > KEYS_[i + 1].p) i++;
+    const a = KEYS_[i], b = KEYS_[i + 1];
     const t = smooth(0, 1, clamp((p - a.p) / (b.p - a.p)));
     tmpP.set(lerp(a.pos[0], b.pos[0], t), lerp(a.pos[1], b.pos[1], t), lerp(a.pos[2], b.pos[2], t));
     fovAdd = lerp(a.fov, b.fov, t);
@@ -149,11 +158,6 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
     pose(p);
     // pri úzkych displejoch kameru trochu odsunieme od cieľa
-    if (camera.aspect < 0.9) {
-      const k = smooth(0.3, 0.5, p);
-      tmpP.sub(tmpT).multiplyScalar(1 + 0.35 * k).add(tmpT);
-      tmpP.y += 0.25 * k;
-    }
     camera.fov = baseFov + fovAdd * (camera.aspect < 0.9 ? 0.4 : 1);
     camera.updateProjectionMatrix();
     camera.position.copy(tmpP);
