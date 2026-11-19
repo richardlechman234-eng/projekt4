@@ -392,8 +392,8 @@ def stack(name, x, y, n, r=0.34, w=0.24):
     g = empty(name, (0, 0, 0), G)
     for i in range(n):
         tire(f"{name}_{i}", (x + 0.012 * ((i * 7) % 3 - 1), y + 0.01 * ((i * 5) % 3 - 1), w / 2 + i * w), g, r, w, "Z", rim=False)
-stack("StackR1", 3.1, -1.4, 6)
-stack("StackR2", 3.1, -2.2, 4)
+stack("StackR1", 3.15, 2.25, 6)
+stack("StackR2", 3.15, -0.3, 4)
 stack("StackB", 2.95, 3.1, 5)
 
 # ---- otočná plošina (podstava statická, horný kruh sa točí s autom)

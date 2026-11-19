@@ -62,7 +62,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=5");
+  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=6");
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {
@@ -153,6 +153,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     // bubliny
     car.getWorldQuaternion(q);
     const show = smooth(0.42, 0.54, p);
+    const cc = new THREE.Vector3(); car.getWorldPosition(cc); cc.y += 0.6; cc.project(camera);
+    const cx = (cc.x * 0.5 + 0.5) * W;
     bubbles.forEach((b, idx) => {
       w.copy(b.a); car.localToWorld(w);
       nW.copy(b.n).applyQuaternion(q);
@@ -168,7 +170,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
       b.el.style.visibility = op < 0.02 ? "hidden" : "visible";
       b.el.style.transform = `translate(${(x - 26).toFixed(1)}px,${(y - 26).toFixed(1)}px)`;
       b.el.style.zIndex = String(1000 - Math.round(w.z * 500));
-      b.el.classList.toggle("left", x > W * 0.6);
+      b.el.classList.toggle("left", x < cx - 8);
       b.el.tabIndex = op > 0.5 ? 0 : -1;
     });
     onProgress && onProgress(p);
