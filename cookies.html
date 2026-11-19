@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; font-src 'self'; style-src 'self' 'unsafe-inline'; manifest-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; upgrade-insecure-requests"><meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Cookies – PLS GROUP</title><meta name="robots" content="noindex,follow">
 <link rel="stylesheet" href="css/fonts.css"><link rel="stylesheet" href="css/style.css"></head><body>
 <header class="top"><div class="wrap"><nav aria-label="Hlavné menu"><a class="logo" href="index.html"><i>P</i><span>PLS GROUP<small>AUTOSLUŽBY PLN</small></span></a><a class="btn o sm" href="index.html#objednavka">Objednať sa</a></nav></div></header>
@@ -10,7 +10,14 @@
 <h2>Čo používame</h2>
 <p>Tento web <b>nepoužíva žiadne analytické, reklamné ani sledovacie cookies</b>. Fonty aj 3D prvky načítavame z vlastného servera, takže pri samotnom prezeraní nie sú vaše údaje posielané tretím stranám.</p>
 <table><tr><th>Názov</th><th>Účel</th><th>Typ</th><th>Platnosť</th></tr>
-<tr><td><code>pls-map</code> (localStorage)</td><td>Zapamätá si, že ste súhlasili so zobrazením mapy Google</td><td>funkčné, vami vyvolané</td><td>kým ho nevymažete</td></tr></table>
+<tr><td><code>pls-map</code> (localStorage)</td><td>Zapamätá si, že ste súhlasili so zobrazením mapy Google</td><td>funkčné, vami vyvolané</td><td>kým ho nevymažete</td></tr>
+<tr><td><code>pls-google</code> (localStorage)</td><td>Zapamätá si, že ste súhlasili so zobrazením recenzií z Google</td><td>funkčné, vami vyvolané</td><td>kým ho nevymažete</td></tr>
+<tr><td><code>pls-season</code> (localStorage)</td><td>Zapamätá si, že ste zavreli sezónny oznam</td><td>funkčné</td><td>kým ho nevymažete</td></tr>
+<tr><td><code>pls-sent</code> (sessionStorage)</td><td>Zabráni dvojitému odoslaniu objednávky</td><td>funkčné</td><td>do zatvorenia karty</td></tr></table>
+<h2>Recenzie z Google</h2>
+<p>Hodnotenie na stránke je údaj overený na Google Maps. Texty recenzií sa (ak je funkcia zapnutá) načítajú priamo z Google až po kliknutí na „Zobraziť recenzie“. Vtedy sa váš prehliadač pripojí k serverom Google a Google spracúva vašu IP adresu.</p>
+<h2>Štatistika návštevnosti</h2>
+<p>Ak je zapnutá, používame Plausible Analytics – nástroj bez cookies, ktorý neukladá IP adresy ani nesleduje návštevníka naprieč webmi. Preto nevyžaduje súhlas.</p>
 <h2>Mapa Google</h2>
 <p>Mapa sa načíta až po kliknutí na „Zobraziť mapu“. Vtedy sa váš prehliadač pripojí k serverom spoločnosti Google a Google môže ukladať vlastné cookies a spracúvať vašu IP adresu. Ak nechcete, mapu nezobrazujte. Môžete použiť odkaz „Navigovať v Mapách“, ktorý sa otvorí v samostatnej karte. Zapamätanie súhlasu zrušíte vymazaním údajov stránky v prehliadači.</p>
 <h2>Správa cookies</h2>
@@ -19,4 +26,4 @@
 <footer><div class="wrap"><div class="col"><b data-co="name"></b><span data-co="address"></span></div>
 <div class="col"><a href="zasady-ochrany-osobnych-udajov.html">Ochrana osobných údajov</a><a href="cookies.html">Cookies</a><a href="informacie-pre-spotrebitela.html">Informácie pre spotrebiteľa</a></div>
 <p class="small">© <span id="y"></span> <span data-co="name"></span></p></div></footer>
-<script src="js/config.js"></script><script src="js/legal.js"></script></body></html>
+<script src="js/config.js"></script><script src="js/legal.js"></script><script src="js/guard.js"></script></body></html>

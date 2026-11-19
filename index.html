@@ -2,7 +2,9 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; font-src 'self'; style-src 'self' 'unsafe-inline'; manifest-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-P1w93HrMnzChY1Uya2EqS6/1L2RTDTASWgA8ZQ0S8JQ=' 'sha256-jVDK4So1/Xs1qtTqiEeaP9ovGm/TKw1h0k6HE5Y5H5E=' https://plausible.io; worker-src 'self' blob:; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com https://*.google.com https://*.googleapis.com; connect-src 'self' data: blob: https://formspree.io https://places.googleapis.com https://plausible.io; frame-src https://maps.google.com https://www.google.com; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>PLS GROUP – Autoservis Bratislava | Servis, pneuservis, STK, odťah</title>
 <meta name="description" content="Autoservis v Bratislave – Vrakuni. Servis, diagnostika, pneuservis, výmena skiel, odťah, klimatizácia a príprava na STK/EK. Objednajte sa online.">
 <meta name="theme-color" content="#0d0f12">
@@ -11,9 +13,11 @@
 <meta property="og:title" content="PLS GROUP – Autoservis Bratislava">
 <meta property="og:description" content="Vstúpte do našej garáže a vyberte si službu. Online objednávka.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff5a1f'/%3E%3Ctext x='16' y='24' font-family='Arial Black,Arial' font-weight='900' font-size='22' text-anchor='middle' fill='%23121212'%3EP%3C/text%3E%3C/svg%3E">
-<script>document.documentElement.classList.add('js')</script>
+<script>document.documentElement.classList.add('js');try{if(top!==self&&top.location.hostname!==location.hostname)throw 0}catch(e){top.location=location.href}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"AutoRepair","name":"PLS GROUP s.r.o. – Autoslužby PLN","areaServed":"Bratislava","telephone":"+421902121221","address":{"@type":"PostalAddress","streetAddress":"Hradská 14269/25","postalCode":"821 07","addressLocality":"Bratislava – Vrakuňa","addressCountry":"SK"},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"08:00","closes":"16:00"}]}</script>
 <link rel="preload" href="fonts/BarlowCondensed-800-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/poster.webp" as="image" fetchpriority="high">
+<link rel="modulepreload" href="vendor/three/three.module.js">
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/style.css">
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/jsm/"}}</script>
@@ -25,7 +29,7 @@
 <header class="top"><div class="wrap"><nav aria-label="Hlavné menu">
   <a class="logo" href="#" aria-label="PLS GROUP – hore"><i>P</i><span>PLS GROUP<small>AUTOSLUŽBY PLN</small></span></a>
   <button class="burger" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
-  <ul id="menu"><li><a href="#sluzby">Služby</a></li><li><a href="#postup">Ako to prebieha</a></li><li><a href="#preco">Prečo my</a></li><li><a href="#kontakt">Kontakt</a></li></ul>
+  <ul id="menu"><li><a href="#sluzby">Služby</a></li><li><a href="#cennik">Cenník</a></li><li><a href="#o-nas">O nás</a></li><li><a href="#recenzie">Recenzie</a></li><li><a href="#faq">Otázky</a></li><li><a href="#kontakt">Kontakt</a></li></ul>
   <button class="btn o sm" type="button" data-book="servis">Objednať sa</button>
 </nav></div></header>
 
@@ -34,6 +38,7 @@
 <!-- ============ 3D scéna: vráta → garáž → auto → bublinky ============ -->
 <section class="scene-wrap" aria-label="Interaktívna prehliadka garáže. Skrolovaním vojdete dovnútra, bublinky pri aute otvárajú služby.">
   <div class="scene">
+    <img class="poster" src="assets/poster.webp" alt="" width="1600" height="900" fetchpriority="high">
     <canvas id="gl" aria-hidden="true"></canvas>
     <div class="loader" role="status"><div>Otváram garáž…<b></b></div></div>
     <div class="bubbles"></div>
@@ -41,7 +46,8 @@
       <div class="hero-intro"><h1 class="t">PLS GROUP</h1><p class="sub">Autoservis <em>·</em> Bratislava – Vrakuňa</p><p class="s">Servis · diagnostika · pneuservis · STK · odťah</p></div>
       <p class="hint" role="note">Kliknite na bublinu a uvidíte, čo robíme</p>
       <div class="cta-bar"><button class="btn o" type="button" data-book="servis">Objednať sa online</button><a class="btn" href="#sluzby">Všetky služby</a></div>
-      <a class="skipscene" href="#sluzby">Preskočiť animáciu</a>
+      <div class="chips" role="group" aria-label="Služby – kliknite pre detail"></div>
+      <a class="skipscene" href="#sluzby">Preskočiť na obsah</a>
     </div>
   </div>
 </section>
@@ -53,6 +59,16 @@
   </div>
   <ul class="cards" id="cards"></ul>
   <noscript><p style="margin-top:30px;font-size:20px">Pre zobrazenie služieb je potrebný JavaScript. Zavolajte nám na <a href="tel:+421902121221">0902 121 221</a>.</p></noscript>
+</div></section>
+
+<section id="cennik" class="sec prices"><div class="wrap">
+  <div class="head">
+    <div><p class="eyebrow" style="margin-bottom:16px">Cenník</p><h2>Orientačné ceny</h2></div>
+    <p>Bežné úkony za pevné ceny. Pri opravách vždy najprv urobíme prehliadku a cenu vám povieme vopred.</p>
+  </div>
+  <div class="pgrid" id="cennik-list"></div>
+  <p class="pnote" id="cennik-note"></p>
+  <div class="row" style="margin-top:26px"><button class="btn o" type="button" data-book="pneu">Objednať prezutie</button><button class="btn line" type="button" data-book="servis">Objednať servis</button></div>
 </div></section>
 
 <section id="postup" class="sec process"><div class="wrap">
@@ -78,6 +94,41 @@
   </dl>
 </div></div></section>
 
+<section id="o-nas" class="sec about"><div class="wrap"><div class="agrid">
+  <div class="aimg"><img src="assets/photos/mechanic-engine.jpg" alt="" loading="lazy" width="900" height="600"><span class="atag">Vrakuňa · Bratislava</span></div>
+  <div>
+    <p class="eyebrow" style="margin-bottom:16px">O nás</p>
+    <h2>Servis, ktorému môžete veriť</h2>
+    <p class="alead"><span data-co="name"></span> – <span data-co="brand"></span> je autoservis v bratislavskej Vrakuni. Staráme sa o osobné autá od pravidelnej údržby a prezutia až po diagnostiku a väčšie opravy.</p>
+    <p>Pracujeme tak, ako by sme chceli, aby sa niekto staral o naše vlastné auto: najprv zistíme, čo je skutočne zlé, povieme vám cenu a až potom začneme. Staré diely vám radi ukážeme.</p>
+    <ul class="afacts">
+      <li><b data-g="rating">4,9</b><span>hodnotenie na Google</span></li>
+      <li><b>8</b><span>služieb na jednom mieste</span></li>
+      <li><b>Po – Pi</b><span>8:00 – 16:00</span></li>
+    </ul>
+  </div>
+</div></div></section>
+
+<section id="recenzie" class="sec reviews"><div class="wrap">
+  <p class="eyebrow" style="margin-bottom:16px">Recenzie</p>
+  <h2>Čo o nás hovoria zákazníci</h2>
+  <div id="recenzie-box"></div>
+</div></section>
+
+<section id="faq" class="sec faq"><div class="wrap"><div class="fgrid2">
+  <div><p class="eyebrow" style="margin-bottom:16px">Otázky</p><h2>Často kladené otázky</h2><p class="fsub">Nenašli ste odpoveď? Zavolajte na <a href="tel:+421902121221" data-co-href="phoneHref" data-co-prefix="tel:"><b data-co="phone"></b></a>.</p></div>
+  <div class="qa">
+    <details><summary>Ako sa objednám?</summary><p>Kliknite na „Objednať sa“, vyberte službu a termín a odošlite. Termín vám potvrdíme telefonicky alebo e-mailom. Objednať sa môžete aj telefonicky.</p></details>
+    <details><summary>Koľko ma bude oprava stáť?</summary><p>Bežné úkony nájdete v <a href="#cennik">cenníku</a>. Pri opravách najprv urobíme prehliadku a povieme vám rozsah a cenu. Bez vášho súhlasu nič nerobíme.</p></details>
+    <details><summary>Ako dlho bude auto v servise?</summary><p>Odhad času vám povieme pri objednávke alebo po prehliadke. Ak sa počas opravy niečo zmení, zavoláme vám.</p></details>
+    <details><summary>Kedy musím prezuť na zimné pneumatiky?</summary><p>Na Slovensku sú zimné pneumatiky povinné vždy, keď je na ceste súvislá vrstva snehu, ľadu alebo námrazy. Odporúčame prezuť, keď teploty klesajú pod 7 °C – zvyčajne v októbri až novembri.</p></details>
+    <details><summary>Uskladníte mi pneumatiky?</summary><p>Áno, sezónne pneumatiky vám uskladníme. Pri ďalšom prezutí ich máte pripravené.</p></details>
+    <details><summary>Robíte aj STK?</summary><p>Auto na STK a emisnú kontrolu pripravíme a závady opravíme. Samotnú kontrolu a doklad vydáva stanica technickej kontroly.</p></details>
+    <details><summary>Čo ak auto nepojazdí?</summary><p>Zavolajte nám. Poradíme, čo robiť na mieste, a dohodneme odťah k nám do servisu.</p></details>
+    <details><summary>Je na opravu záruka?</summary><p>Na vykonané práce a dodané diely platí záruka podľa zákona. Podrobnosti nájdete v <a href="informacie-pre-spotrebitela.html">informáciách pre spotrebiteľa</a>.</p></details>
+  </div>
+</div></div></section>
+
 <section id="kontakt" class="sec contact"><div class="wrap">
   <p class="eyebrow" style="margin-bottom:16px">Kontakt</p>
   <h2>Zavolajte, zastavte sa alebo sa objednajte</h2>
@@ -86,6 +137,7 @@
       <div class="row"><small>Firma</small><b><span data-co="name"></span> – <span data-co="brand"></span></b></div>
       <div class="row"><small>Adresa</small><b data-co="address"></b></div>
       <div class="row"><small>Telefón</small><b><a data-co-href="phoneHref" data-co-prefix="tel:" href="tel:+421902121221" data-co="phone"></a></b></div>
+      <div class="row"><small>IČO / DIČ</small><b><span data-co="ico"></span> / <span data-co="dic"></span></b></div>
       <div class="row" style="border-bottom:0"><small>Otváracie hodiny</small><ul class="hours"><li><span>Pondelok</span><b>8:00–16:00</b></li><li><span>Utorok</span><b>8:00–16:00</b></li><li><span>Streda</span><b>8:00–16:00</b></li><li><span>Štvrtok</span><b>8:00–16:00</b></li><li><span>Piatok</span><b>8:00–16:00</b></li><li><span>Sobota</span><b>Zatvorené</b></li><li><span>Nedeľa</span><b>Zatvorené</b></li></ul></div>
       <div class="acts">
         <button class="btn o" type="button" data-book="servis">Objednať sa online</button>
@@ -106,7 +158,7 @@
   <div class="col"><b data-co="name"></b><span data-co="address"></span><span>IČO: <span data-co="ico"></span> · DIČ: <span data-co="dic"></span></span><span>IČ DPH: <span data-co="icdph"></span></span><span data-co="register"></span></div>
   <div class="col"><b>Informácie</b><a href="zasady-ochrany-osobnych-udajov.html">Ochrana osobných údajov</a><a href="cookies.html">Cookies</a><a href="informacie-pre-spotrebitela.html">Informácie pre spotrebiteľa a reklamácie</a></div>
   <div class="col"><b>Kontakt</b><a data-co-href="phoneHref" data-co-prefix="tel:" href="tel:+421902121221" data-co="phone"></a><span>Po – Pi 8:00 – 16:00</span></div>
-  <p class="small">© <span id="y"></span> <span data-co="name"></span> Všetky práva vyhradené. Fotografie v zozname služieb: Unsplash (ukážkové). 3D garáž: vlastná tvorba. 3D model auta: <a href="https://sketchfab.com/3d-models/bmw-m4-f82-razor-2014-wwwvecarzcom-25d00f20b8cf4828bd934acb31e0aae4" target="_blank" rel="noopener">„BMW M4 F82 Razor 2014“</a> od vecarz, licencia <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> (upravené: prefarbenie, úprava pre web). BMW a M sú ochranné známky BMW AG; web nie je s BMW spojený.</p>
+  <p class="small">© <span id="y"></span> <span data-co="name"></span> Všetky práva vyhradené. Fotografie: Unsplash (ukážkové). 3D garáž: vlastná tvorba. 3D model auta: <a href="https://sketchfab.com/3d-models/bmw-m4-f82-razor-2014-wwwvecarzcom-25d00f20b8cf4828bd934acb31e0aae4" target="_blank" rel="noopener">„BMW M4 F82 Razor 2014“</a> od vecarz, licencia <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> (upravené: prefarbenie, úprava pre web). BMW a M sú ochranné známky BMW AG; web nie je s BMW spojený.</p>
 </div></footer>
 
 <dialog id="svc-dlg" aria-modal="true"></dialog>

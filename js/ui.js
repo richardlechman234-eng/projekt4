@@ -1,4 +1,5 @@
 import { SERVICES, byId } from "./services.js";
+import { initExtras } from "./extras.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -76,7 +77,9 @@ function bookingForm(selected) {
       <button class="btn o" type="submit">Odoslať objednávku</button>
       <button class="btn line" type="button" data-close>Zrušiť</button>
     </div>
-    <p class="note-s">Po kliknutí sa otvorí váš e-mailový program s pripravenou správou. Odošlete ju a údaje sa k nám dostanú. Web ich sám nikam neukladá.</p>
+    <p class="note-s">${CO.bookingEndpoint
+      ? "Objednávka sa odošle priamo do servisu. Údaje použijeme len na vybavenie objednávky."
+      : "V ďalšom kroku si vyberiete, či objednávku pošlete cez WhatsApp, e-mail alebo ju nadiktujete telefonicky."}</p>
   </form>`;
 }
 
@@ -125,29 +128,66 @@ function submit(form) {
   ].filter((l, i, a) => l !== "" || a[i - 1] !== "");
   const body = lines.join("\n");
   const subject = `Objednávka: ${svc} – ${fmtDate(v("date"))} ${t}`;
-  showDone({ body, subject, svc, date: v("date"), hour: slot.value, car: v("car") });
+  const o = { body, subject, svc, date: v("date"), hour: slot.value, car: v("car") };
+  if (!CO.bookingEndpoint) return showDone(o);
+  // ochrana pred opakovaným odoslaním (dvojklik, spam)
+  try { const last = Number(sessionStorage.getItem("pls-sent") || 0); if (Date.now() - last < 60000) return showSent(o, true); } catch (e) {}
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = "Odosielam…";
+  fetch(CO.bookingEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ _subject: subject, sluzba: svc, termin: `${fmtDate(v("date"))}, ${t}`, meno: v("name"), telefon: v("tel"),
+      email: v("mail"), _replyto: v("mail"), vozidlo: v("car"), spz: v("spz"), poznamka: v("note"), suhlas_gdpr: "áno" }),
+  }).then((r) => {
+    if (!r.ok) throw new Error(String(r.status));
+    try { sessionStorage.setItem("pls-sent", String(Date.now())); } catch (e) {}
+    showSent(o, false);
+  }).catch(() => showDone(o, true));
 }
 
-function showDone(o) {
-  const to = CO.bookingEmail;
-  const mailto = to ? `mailto:${to}?subject=${encodeURIComponent(o.subject)}&body=${encodeURIComponent(o.body)}` : "";
+function showSent(o, again) {
   bkDlg.innerHTML = `
     <button class="x" type="button" data-close aria-label="Zavrieť">×</button>
     <div class="done">
-      <p class="eyebrow">Posledný krok</p>
-      <h3 id="book-title">${to ? "Odošlite pripravenú správu" : "Skoro hotovo"}</h3>
-      ${to
-        ? `<p>Kliknite na tlačidlo. Otvorí sa váš e-mailový program s vyplnenou objednávkou. Stačí ju odoslať.</p>`
-        : `<p>Online odosielanie ešte nie je nastavené (chýba e-mail prevádzky). Zavolajte nám na <a href="tel:${CO.phoneHref}"><b>${esc(CO.phone)}</b></a> a nadiktujte údaje nižšie.</p>`}
-      <pre>${esc(o.body)}</pre>
+      <p class="eyebrow">${again ? "Už odoslané" : "Hotovo"}</p>
+      <h3 id="book-title">${again ? "Objednávku sme už dostali" : "Objednávka odoslaná"}</h3>
+      <p>${again ? "Pred chvíľou ste nám poslali objednávku. Ak chcete niečo zmeniť, zavolajte nám." : "Ďakujeme. Termín vám potvrdíme telefonicky alebo e-mailom, zvyčajne v ten istý pracovný deň."}</p>
       <div class="row">
-        ${to ? `<a class="btn o" href="${mailto}">Otvoriť e-mail a odoslať</a>` : `<a class="btn o" href="tel:${CO.phoneHref}">Zavolať ${esc(CO.phone)}</a>`}
-        <button class="btn line" type="button" id="ics">Pridať do kalendára (.ics)</button>
+        <button class="btn o" type="button" id="ics">Pridať do kalendára (.ics)</button>
+        <a class="btn line" href="tel:${esc(CO.phoneHref)}">Zavolať ${esc(CO.phone)}</a>
         <button class="btn line" type="button" data-close>Zavrieť</button>
       </div>
       <p class="note-s">Termín je záväzný až po našom potvrdení.</p>
     </div>`;
   $("#ics", bkDlg).addEventListener("click", () => downloadIcs(o));
+}
+
+function showDone(o, failed = false) {
+  const to = CO.bookingEmail;
+  const mailto = to ? `mailto:${to}?subject=${encodeURIComponent(o.subject)}&body=${encodeURIComponent(o.body)}` : "";
+  const wa = CO.whatsapp ? `https://wa.me/${CO.whatsapp}?text=${encodeURIComponent(o.body)}` : "";
+  bkDlg.innerHTML = `
+    <button class="x" type="button" data-close aria-label="Zavrieť">×</button>
+    <div class="done">
+      <p class="eyebrow">Posledný krok</p>
+      <h3 id="book-title">Pošlite nám objednávku</h3>
+      <p>${failed ? "Odoslanie sa nepodarilo (výpadok spojenia). Nič sa nestratilo – vyberte si iný spôsob:" : "Vyberte si, ako nám objednávku pošlete. Text je pripravený:"}</p>
+      <pre id="bk-text">${esc(o.body)}</pre>
+      <div class="row">
+        ${wa ? `<a class="btn o" href="${wa}" target="_blank" rel="noopener noreferrer">Poslať cez WhatsApp</a>` : ""}
+        <a class="btn ${wa ? "line" : "o"}" href="tel:${esc(CO.phoneHref)}">Zavolať ${esc(CO.phone)}</a>
+        ${to ? `<a class="btn line" href="${mailto}">Poslať e-mailom</a>` : ""}
+        <button class="btn line" type="button" id="bk-copy">Kopírovať text</button>
+        <button class="btn line" type="button" id="ics">Do kalendára (.ics)</button>
+      </div>
+      <p class="note-s">Termín je záväzný až po našom potvrdení.</p>
+    </div>`;
+  $("#ics", bkDlg).addEventListener("click", () => downloadIcs(o));
+  $("#bk-copy", bkDlg).addEventListener("click", async (e) => {
+    try { await navigator.clipboard.writeText(o.body); e.target.textContent = "Skopírované ✓"; }
+    catch (err) { const r = document.createRange(); r.selectNodeContents($("#bk-text", bkDlg)); getSelection().removeAllRanges(); getSelection().addRange(r); }
+  });
 }
 
 function downloadIcs(o) {
@@ -206,6 +246,7 @@ export function initUi() {
   const setMenu = (o) => { hd.classList.toggle("open", o); bg.setAttribute("aria-expanded", o); };
   bg.addEventListener("click", () => setMenu(!hd.classList.contains("open")));
   document.querySelectorAll("#menu a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+  initExtras();
   if (location.hash === "#objednavka") openBooking();
   const sy = $("#y"); if (sy) sy.textContent = new Date().getFullYear();
 }

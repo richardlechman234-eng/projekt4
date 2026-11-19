@@ -604,14 +604,14 @@ for o in car_meshes:
     if "windscreen" in o.name:
         a = np.array([inv @ o.matrix_world @ Vector(v) for v in o.bound_box]); _ws.append((a.min(0) + a.max(0)) / 2)
 ws_c = min(_ws, key=lambda c: c[1]) if _ws else np.array([0, -0.5, 1.05])     # predné (nie zadné) sklo
-hood_y = ymin + (ws_c[1] - ymin) * 0.45
+hood_y = ymin + (ws_c[1] - ymin) * 0.40
 # výfuk: najnižšie zadné body vpravo od stredu
 rear = P[(P[:, 1] > ymax - 0.18) & (P[:, 2] < 0.45) & (P[:, 0] > 0.25) & (P[:, 0] < 0.75)]
 ex = rear.mean(0) if len(rear) else np.array([0.45, ymax, 0.3])
 ANCH = {
     "klima": (0.0, ymin + 0.02, 0.36),                       # kondenzátor za predným nárazníkom
-    "motor": (0.0, hood_y, top_z(hood_y) + 0.06),            # kapota
-    "sklo": (ws_c[0], ws_c[1] + 0.12, ws_c[2] + 0.24),              # čelné sklo
+    "motor": (-0.38, hood_y, top_z(hood_y, -0.38) + 0.06),        # kapota, ľavá strana (neprekrýva sa so sklom)            # kapota
+    "sklo": (0.32, ws_c[1] + 0.12, ws_c[2] + 0.22),              # čelné sklo
     "pneu": (fr[0] + 0.14, fr[1], fr[2]),                    # predné koleso
     "servis": (rr[0] + 0.14, rr[1], rr[2]),                  # zadné koleso – brzdy, olej, podvozok
     "diag": (0.62, ws_c[1] + 0.55, 0.95),                    # kabína – diagnostická zásuvka pri palubovke
@@ -634,5 +634,8 @@ for o in bpy.data.objects:
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "tools", "garage.blend"))
 bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_apply=True, export_yup=True,
-                          export_cameras=False, export_lights=False, export_image_format="AUTO")
+                          export_cameras=False, export_lights=False, export_image_format="WEBP",
+                          export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=7,
+                          export_draco_position_quantization=14, export_draco_normal_quantization=10,
+                          export_draco_texcoord_quantization=12)
 print("EXPORTED", OUT, os.path.getsize(OUT))

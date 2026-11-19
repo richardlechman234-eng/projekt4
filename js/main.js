@@ -11,6 +11,8 @@ const loader = document.querySelector(".loader");
 const intro = document.querySelector(".hero-intro");
 const hint = document.querySelector(".hint");
 const cta = document.querySelector(".cta-bar");
+const chips = document.querySelector(".chips");
+const poster = document.querySelector(".poster");
 
 function webgl() {
   try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch (e) { return false; }
@@ -29,9 +31,11 @@ if (!webgl()) {
       onProgress: (p) => {
         hint.classList.toggle("on", p > 0.49 && p < 0.88);
         cta.classList.toggle("on", p > 0.9);
+        chips.classList.toggle("on", p > 0.46);
       },
     });
     loader.classList.add("done");
+    poster.classList.add("off");
     // Úvod: hneď po načítaní sa otvoria vráta a kamera vojde k autu (~1.4 s).
     // Potom scroll ovláda už len otáčanie auta – späť von z garáže sa nedá.
     const P0 = 0.5;
@@ -52,8 +56,8 @@ if (!webgl()) {
     window.__scene = api;
   } catch (err) {
     console.error(err);
-    wrap.hidden = true;
-    document.documentElement.classList.add("nowebgl");
+    loader.classList.add("done");     // 3D zlyhalo → ostane statický obrázok + obdĺžniky služieb
+    chips.classList.add("on");
   }
 }
 

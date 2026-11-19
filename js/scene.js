@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { SERVICES } from "./services.js";
 
@@ -21,13 +22,16 @@ const YAW_END = -1.95;      // ~ -112° → bok + zadná tretina (výfuk) ku kam
 const toThree = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // Blender → three
 
 export async function createScene({ canvas, bubblesEl, onBubble, onProgress, reduced }) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  // slabšie zariadenia (mobil, málo jadier) → nižšie rozlíšenie a jednoduchšie tiene
+  const small = Math.min(screen.width, screen.height) < 820;
+  const weak = small || (navigator.hardwareConcurrency || 8) <= 4;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !weak, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, weak ? 1.25 : 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = weak ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
   renderer.shadowMap.autoUpdate = false;
 
   const scene = new THREE.Scene();
@@ -50,7 +54,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   spot.position.set(0.4, 3.1, 0.6);
   spot.target.position.set(0, 0, 0);
   spot.castShadow = true;
-  spot.shadow.mapSize.set(1024, 1024);
+  spot.shadow.mapSize.set(weak ? 512 : 1024, weak ? 512 : 1024);
   spot.shadow.bias = -0.0004;
   scene.add(spot, spot.target);
   const sun = new THREE.DirectionalLight(0xdfe8ff, 0.7);
@@ -62,7 +66,9 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=9");
+  const draco = new DRACOLoader().setDecoderPath("vendor/three/jsm/libs/draco/gltf/").setDecoderConfig({ type: "wasm" });
+  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync("models/garage.glb?v=10");
+  draco.dispose();
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {
@@ -77,11 +83,6 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   car.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   const door = root.getObjectByName("Door");
 
-  // logo na vrátach (canvas textúra)
-  try { await Promise.all([document.fonts.load('800 120px "Barlow Condensed"'), document.fonts.load('600 40px "Barlow"')]); } catch (e) {}
-  const logo = makeLogo();
-  // logo na vrátach vypnuté – nad vrátami je veľká svetelná tabuľa a HTML nadpis
-  void logo;
 
   // bubliny
   const bubbles = SERVICES.map((s) => {
@@ -148,9 +149,10 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
     pose(p);
     // pri úzkych displejoch kameru trochu odsunieme od cieľa
-    if (camera.aspect < 0.9 && p > 0.5) {
-      tmpP.sub(tmpT).multiplyScalar(1.35).add(tmpT);
-      tmpP.y += 0.25;
+    if (camera.aspect < 0.9) {
+      const k = smooth(0.3, 0.5, p);
+      tmpP.sub(tmpT).multiplyScalar(1 + 0.35 * k).add(tmpT);
+      tmpP.y += 0.25 * k;
     }
     camera.fov = baseFov + fovAdd * (camera.aspect < 0.9 ? 0.4 : 1);
     camera.updateProjectionMatrix();
@@ -192,40 +194,17 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
   resize();
   new ResizeObserver(() => { resize(); kick(); }).observe(canvas);
+  // shadery skompilovať vopred → úvodná animácia bez trhania
+  try { renderer.shadowMap.needsUpdate = true; await renderer.compileAsync(scene, camera); } catch (e) {}
   frame();
   kick();
 
   return {
     setProgress: (p) => { if (!intro) { setTarget(p); kick(); } },
+    highlight: (id) => bubbles.forEach((b) => b.el.classList.toggle("hot", b.s.id === id)),
     playIntro: (to, dur, done) => { intro = { t0: performance.now(), dur, to, done }; kick(); },
     pause: () => { running = false; },
     resume: () => { running = true; kick(); },
     kick,
   };
-}
-
-function makeLogo() {
-  const c = document.createElement("canvas");
-  c.width = 2048; c.height = 1024;
-  const g = c.getContext("2d");
-  // oranžový štvorec s "P"
-  const s = 330, x0 = 150, y0 = 200;
-  g.fillStyle = "#ff5a1f"; g.fillRect(x0, y0, s, s);
-  g.fillStyle = "#121212"; g.font = '800 300px "Barlow Condensed", Impact, sans-serif'; g.textAlign = "center"; g.textBaseline = "alphabetic";
-  g.fillText("P", x0 + s / 2, y0 + s * 0.8);
-  g.textAlign = "left";
-  g.fillStyle = "#ffffff"; g.font = '800 330px "Barlow Condensed", Impact, sans-serif';
-  g.fillText("PLS GROUP", x0 + s + 60, y0 + 270);
-  g.fillStyle = "#ff5a1f"; g.fillRect(x0 + s + 64, y0 + 306, 1380, 12);
-  g.fillStyle = "#e8e8e8"; g.font = '700 120px "Barlow Condensed", Impact, sans-serif';
-  g.fillText("AUTOSLUŽBY PLN  ·  BRATISLAVA", x0 + s + 64, y0 + 470);
-  g.fillStyle = "rgba(255,255,255,.75)"; g.font = '600 78px "Barlow", sans-serif';
-  g.fillText("servis · diagnostika · pneuservis · STK", x0, 840);
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.9, 1.95), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false }));
-  m.position.set(0, -1.35, 0.045);   // Door pivot je hore, panely idú dole; +z je predná strana vrát
-  m.name = "DoorLogo";
-  return m;
 }

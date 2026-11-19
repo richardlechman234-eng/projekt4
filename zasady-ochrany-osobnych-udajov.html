@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; font-src 'self'; style-src 'self' 'unsafe-inline'; manifest-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; upgrade-insecure-requests"><meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Zásady ochrany osobných údajov – PLS GROUP</title><meta name="robots" content="noindex,follow">
 <link rel="stylesheet" href="css/fonts.css"><link rel="stylesheet" href="css/style.css"></head><body>
 <header class="top"><div class="wrap"><nav aria-label="Hlavné menu"><a class="logo" href="index.html"><i>P</i><span>PLS GROUP<small>AUTOSLUŽBY PLN</small></span></a><a class="btn o sm" href="index.html#objednavka">Objednať sa</a></nav></div></header>
@@ -17,16 +17,19 @@
 <tr><td>Reklamácie</td><td>údaje o reklamácii a zákazníkovi</td><td>čl. 6 ods. 1 písm. c) a b)</td><td>po dobu reklamačnej lehoty a zákonných lehôt</td></tr></table>
 <p>Poskytnutie údajov pri objednávke je dobrovoľné, bez nich však nemôžeme objednávku vybaviť.</p>
 <h2>3. Ako funguje formulár objednávky</h2>
-<p>Formulár na webe údaje nikam neodosiela ani neukladá. Po vyplnení sa otvorí váš e-mailový program s pripravenou správou a údaje sa k nám dostanú až vtedy, keď správu sami odošlete. Pri tom sa použije váš poskytovateľ e-mailu.</p>
+<p>Web údaje z formulára sám neukladá. Podľa nastavenia sa objednávka k nám dostane jedným z týchto spôsobov:</p>
+<ul><li><b>priame odoslanie</b> – údaje sa cez šifrované spojenie (HTTPS) odošlú službe Formspree (Formspree, Inc., USA), ktorá nám ich doručí e-mailom. Formspree je náš sprostredkovateľ; prenos do USA prebieha na základe štandardných zmluvných doložiek EÚ, resp. rámca EU–US Data Privacy Framework,</li>
+<li><b>WhatsApp</b> – ak si ho zvolíte, otvorí sa aplikácia WhatsApp s pripraveným textom a správu odosielate vy cez službu WhatsApp (Meta Platforms Ireland Ltd.) podľa jej podmienok,</li>
+<li><b>e-mail alebo telefón</b> – správu odošlete vy z vlastného e-mailu, alebo nám údaje nadiktujete.</li></ul>
 <h2>4. Príjemcovia a prenos do tretích krajín</h2>
-<p>Údaje môžu dostať naši sprostredkovatelia (poskytovateľ e-mailu a IT služieb, účtovník) na základe zmluvy o spracúvaní. Údaje nepredávame. Neprenášame ich mimo EÚ/EHP, ak nie je uvedené inak.</p>
+<p>Údaje môžu dostať naši sprostredkovatelia (poskytovateľ e-mailu a IT služieb, služba na doručovanie formulárov Formspree, účtovník) na základe zmluvy o spracúvaní. Údaje nepredávame. Neprenášame ich mimo EÚ/EHP, ak nie je uvedené inak.</p>
 <h2>5. Vaše práva</h2>
 <ul><li>právo na prístup k údajom, opravu, vymazanie a obmedzenie spracúvania,</li><li>právo na prenosnosť údajov,</li><li>právo namietať proti spracúvaniu založenému na oprávnenom záujme,</li><li>právo kedykoľvek odvolať súhlas (nemá vplyv na zákonnosť spracúvania pred odvolaním),</li><li>právo podať sťažnosť dozornému orgánu: Úrad na ochranu osobných údajov SR, Budova Park one, Námestie 1. mája 18, 811 06 Bratislava, <a href="https://dataprotection.gov.sk" rel="noopener">dataprotection.gov.sk</a>.</li></ul>
 <p>Rozhodovanie založené výlučne na automatizovanom spracúvaní vrátane profilovania neprebieha.</p>
 <h2>6. Cookies a mapa</h2>
-<p>Pozri <a href="cookies.html">Zásady cookies</a>. Web nepoužíva analytické ani marketingové nástroje.</p>
+<p>Pozri <a href="cookies.html">Zásady cookies</a>. Web nepoužíva marketingové nástroje ani sledovacie cookies. Ak je zapnutá štatistika návštevnosti, používame Plausible Analytics (EÚ), ktorá nepoužíva cookies, neukladá IP adresy a neumožňuje vás identifikovať.</p>
 </main>
 <footer><div class="wrap"><div class="col"><b data-co="name"></b><span data-co="address"></span></div>
 <div class="col"><a href="zasady-ochrany-osobnych-udajov.html">Ochrana osobných údajov</a><a href="cookies.html">Cookies</a><a href="informacie-pre-spotrebitela.html">Informácie pre spotrebiteľa</a></div>
 <p class="small">© <span id="y"></span> <span data-co="name"></span></p></div></footer>
-<script src="js/config.js"></script><script src="js/legal.js"></script></body></html>
+<script src="js/config.js"></script><script src="js/legal.js"></script><script src="js/guard.js"></script></body></html>
