@@ -20,7 +20,10 @@ function chips() {
   const box = $(".chips");
   if (!box) return;
   box.innerHTML = SERVICES.map((s) => `<button class="chip" type="button" data-open="${s.id}" data-id="${s.id}"><span class="ci">${s.icon}</span><span>${esc(s.title)}</span></button>`).join("");
-  const hl = (id) => window.__scene?.highlight?.(id);
+  const mark = (id) => box.querySelectorAll(".chip").forEach((c) => c.classList.toggle("hot", c.dataset.id === id));
+  // bez 3D scény (zlyhanie WebGL) zvýrazníme aspoň samotný obdĺžnik
+  const hl = (id) => (window.__scene?.highlight ? window.__scene.highlight(id) : mark(id));
+  document.addEventListener("svc-highlight", (e) => mark(e.detail));
   box.addEventListener("pointerover", (e) => { const c = e.target.closest(".chip"); if (c) hl(c.dataset.id); });
   box.addEventListener("pointerleave", () => hl(null));
   box.addEventListener("focusin", (e) => { const c = e.target.closest(".chip"); if (c) hl(c.dataset.id); });

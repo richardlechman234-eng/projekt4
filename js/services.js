@@ -1,9 +1,9 @@
-/* Služby – použité v bublinách, kartách aj v detailnom okne. */
+/* Služby – použité v bublinách, kartách aj v detailnom okne. mob = krátky názov pre popisky bublín na mobile, zoom = vzdialenosť kamery (m) pri priblížení na miesto služby. */
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
 export const SERVICES = [
   {
-    id: "servis", title: "Servis a údržba", short: "Olej, filtre, brzdy, rozvody, podvozok.",
+    id: "servis", zoom: 2.0, mob: "Servis", title: "Servis a údržba", short: "Olej, filtre, brzdy, rozvody, podvozok.",
     icon: svg('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>'),
     photo: "assets/photos/oil.jpg",
     intro: "Pravidelná údržba predĺži život motoru aj peňaženke. Postupujeme podľa predpisov výrobcu a skutočného stavu auta.",
@@ -13,7 +13,7 @@ export const SERVICES = [
     normal: [1, 0, 0.1]
   },
   {
-    id: "diag", title: "Diagnostika", short: "Svieti kontrolka? Nájdeme príčinu, nehádame.",
+    id: "diag", zoom: 2.1, mob: "Diagnostika", title: "Diagnostika", short: "Svieti kontrolka? Nájdeme príčinu, nehádame.",
     icon: svg('<path d="M3 12h4l2-6 4 12 2-6h6"/>'),
     photo: "assets/photos/diag.jpg",
     intro: "Chybový kód nie je diagnóza. Prístroj ukáže, kde hľadať, a zvyšok urobí skúsený technik.",
@@ -22,7 +22,7 @@ export const SERVICES = [
     normal: [1, 0, 0.35]
   },
   {
-    id: "pneu", title: "Pneuservis", short: "Prezutie, vyváženie, oprava a uskladnenie.",
+    id: "pneu", zoom: 1.6, mob: "Pneuservis", title: "Pneuservis", short: "Prezutie, vyváženie, oprava a uskladnenie.",
     icon: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>'),
     photo: "assets/photos/impact.jpg",
     intro: "Dobré pneumatiky rozhodujú o brzdnej dráhe aj o spotrebe. Sezónne prezutie vybavíme rýchlo.",
@@ -31,7 +31,7 @@ export const SERVICES = [
     normal: [1, 0, 0]
   },
   {
-    id: "sklo", title: "Výmena skiel", short: "Čelné sklo, bočné a zadné sklá.",
+    id: "sklo", zoom: 2.5, mob: "Sklá", title: "Výmena skiel", short: "Čelné sklo, bočné a zadné sklá.",
     icon: svg('<path d="M4 18l2.2-10h11.6L20 18z"/><path d="M8.5 8L7 18M15.5 8L17 18"/>'),
     photo: "",
     intro: "Prasknuté alebo poškodené sklo je bezpečnostné riziko. Vymeníme ho a auto pripravíme na cestu.",
@@ -40,16 +40,18 @@ export const SERVICES = [
     normal: [0, -0.7, 1]
   },
   {
-    id: "odtah", title: "Odťah", short: "Nepojazdné auto odtiahneme k nám do servisu.",
+    id: "odtah", zoom: 2.4, mob: "Odťah", title: "Odťah", short: "Nepojazdné auto odtiahneme k nám do servisu.",
     icon: svg('<path d="M2 17V8h9v9M11 11h5l3.5 3.5V17H11"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/>'),
     photo: "",
     intro: "Auto sa pokazilo a nepohne sa? Zavolajte, poradíme sa a pomôžeme s odvozom do servisu.",
     list: ["Odťah nepojazdného vozidla do servisu", "Preprava po poruche alebo nehode", "Poradenstvo cez telefón, čo robiť na mieste", "Nadväzná oprava priamo u nás"],
     note: "Podmienky a cenu odťahu dohodneme telefonicky podľa miesta a vzdialenosti.",
-    normal: [0.6, -1, 0]
+    normal: [0.6, -1, 0],
+    big: true,          // väčšia bublina, stojí mimo auta (bod "odtah" v js/views.js)
+    call: true          // v detaile hneď hore veľké telefónne číslo
   },
   {
-    id: "klima", title: "Klimatizácia", short: "V lete chladno, v zime bez zarosených okien.",
+    id: "klima", zoom: 2.1, mob: "Klimatizácia", title: "Klimatizácia", short: "V lete chladno, v zime bez zarosených okien.",
     icon: svg('<path d="M12 2v20M4.5 7l15 10M19.5 7l-15 10M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5"/>'),
     photo: "assets/photos/mechanic-engine.jpg",
     intro: "Klimatizácia stráca chladivo aj bez poruchy. Raz za čas ju treba skontrolovať a vyčistiť.",
@@ -58,7 +60,7 @@ export const SERVICES = [
     normal: [0, -1, 0.15]
   },
   {
-    id: "stk", title: "Príprava na STK / EK", short: "Výfuk, emisie, brzdy, svetlá – všetko, čo kontroluje technik.",
+    id: "stk", zoom: 2.2, mob: "STK / EK", title: "Príprava na STK / EK", short: "Výfuk, emisie, brzdy, svetlá – všetko, čo kontroluje technik.",
     icon: svg('<path d="M9 4h6v3H9z"/><path d="M7 5.5H5v16h14v-16h-2"/><path d="M9 14.5l2 2 4-4.5"/>'),
     photo: "assets/photos/inspect.jpg",
     intro: "Aby ste na stanici nemuseli ísť druhýkrát. Prejdeme to, čo bude kontrolovať technik, a závady opravíme.",
@@ -67,7 +69,7 @@ export const SERVICES = [
     normal: [0.3, 1, 0.1]
   },
   {
-    id: "motor", title: "Motory a prevodovky", short: "Od netesností po väčšie opravy.",
+    id: "motor", zoom: 2.4, mob: "Motor", title: "Motory a prevodovky", short: "Od netesností po väčšie opravy.",
     icon: svg('<path d="M5 9h3l2-2h5l2 2h2.5v7H17l-2 2.2H10L8 16H5z"/><path d="M2.5 12v3M21.5 11v4"/>'),
     photo: "assets/photos/engine.jpg",
     intro: "Väčšie opravy začíname prehliadkou. Dostanete jasný rozsah práce a cenu a môžete sa v pokoji rozhodnúť.",

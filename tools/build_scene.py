@@ -1,5 +1,5 @@
 # Blender 5.x headless:  blender -b --factory-startup --python tools/build_scene.py [-- --preview]
-# Postaví garáž (vlastná tvorba) + osadí auto BMW M4 F82 (vecarz, CC BY 4.0) a exportuje models/garage.glb
+# Postaví garáž (vlastná tvorba) + osadí auto Škoda Octavia IV RS (DR1KING100K, CC BY 4.0) a exportuje models/garage.glb
 import bpy, bmesh, math, os, sys
 import numpy as np
 from mathutils import Vector
@@ -7,7 +7,7 @@ from mathutils import Vector
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "models", "garage.glb")
 TEXDIR = os.path.join(ROOT, "tools", "tex")
-SRC_CAR = os.path.join(ROOT, "tools", "src", "bmw_m4_f82_razor.glb")
+SRC_CAR = os.path.join(ROOT, "tools", "src", "skoda_octavia_mk4_rs.glb")
 PREVIEW = "--preview" in sys.argv
 os.makedirs(TEXDIR, exist_ok=True)
 
@@ -146,7 +146,7 @@ M = {
     "glassDark": mat("WindowGlass", (0.02, 0.025, 0.03), 0.6, 0.06),
     "signGlow": mat("SignWhiteGlow", (1, 1, 1), 0.0, 0.3, emit=(1, 1, 1), emit_strength=2.2),
     "rim": mat("Rim", (0.42, 0.43, 0.46), 1.0, 0.28),
-    "body": mat("CarPaint", (0.17, 0.18, 0.20), 0.85, 0.30, coat=1.0),
+    "body": mat("CarPaint", (0.40, 0.010, 0.014), 0.72, 0.30, coat=1.0),      # červená metalíza
     "plate": mat("PlateBlank", (0.78, 0.78, 0.78), 0.0, 0.5),
     "ledpanel": mat("LedPanel", (1, 1, 0.95), 0.0, 0.3, emit=(1, 0.98, 0.92), emit_strength=4.0),
     "lamp": mat("WallLamp", (1, 1, 0.95), 0.0, 0.3, emit=(1, 0.95, 0.85), emit_strength=3.0),
@@ -157,6 +157,24 @@ M = {
     "canYellow": mat("CanYellow", (0.85, 0.62, 0.05), 0.2, 0.4),
     "canGreen": mat("CanGreen", (0.05, 0.38, 0.12), 0.2, 0.4),
     "extRed": mat("ExtinguisherRed", (0.7, 0.02, 0.02), 0.3, 0.3),
+    # dielňa – skrine, náradie, drobnosti
+    "cabYellow": mat("YellowCabinet", (0.95, 0.60, 0.02), 0.35, 0.33, coat=0.6),
+    "cabDark": mat("CabinetDark", (0.06, 0.06, 0.065), 0.5, 0.5),
+    "cavity": mat("DrawerCavity", (0.01, 0.01, 0.012), 0.0, 0.9),
+    "chrome": mat("ToolChrome", (0.80, 0.80, 0.83), 1.0, 0.16),
+    "gripRed": mat("GripRed", (0.70, 0.04, 0.03), 0.0, 0.55),
+    "gripYellow": mat("GripYellow", (0.95, 0.72, 0.04), 0.0, 0.5),
+    "gripBlue": mat("GripBlue", (0.04, 0.18, 0.65), 0.0, 0.5),
+    "rubber": mat("RubberBlack", (0.025, 0.025, 0.028), 0.0, 0.8),
+    "cardboard": mat("Cardboard", (0.52, 0.37, 0.21), 0.0, 0.92),
+    "rag": mat("ShopRag", (0.55, 0.07, 0.05), 0.0, 1.0),
+    "rag2": mat("ShopRagGrey", (0.16, 0.15, 0.14), 0.0, 1.0),
+    "oil": mat("OilStain", (0.012, 0.011, 0.009), 0.0, 0.12),
+    "paper": mat("Paper", (0.88, 0.88, 0.86), 0.0, 0.8),
+    "screen": mat("TabletScreen", (0.05, 0.25, 0.5), 0.0, 0.2, emit=(0.15, 0.55, 1.0), emit_strength=1.6),
+    "jack": mat("JackRed", (0.55, 0.03, 0.02), 0.45, 0.38, coat=0.3),
+    "mug": mat("MugWhite", (0.85, 0.85, 0.83), 0.0, 0.25),
+    "conduit": mat("Conduit", (0.45, 0.46, 0.48), 0.9, 0.4),
 }
 
 # ================================================================== geometria – pomocníci
@@ -449,16 +467,138 @@ for sx in (-1, 1):
 for i in range(6):
     box(f"Park{i}", (0.1, 4.2, 0.005), (-8.5 + i * 2.6 if i < 3 else 3.3 + (i - 3) * 2.6, FF - 9.5, 0.002), M["white"], fs)
 
-# ---- zadná stena: červené skrine so šuflíkmi
-def drawer_unit(name, x0, x1, h, n, y_back=GD / 2 - 0.05, depth=0.65, top=True):
+# ================================================================== DIELŇA – náradie a drobnosti
+def ring(name, R, r, loc, material, parent, rot=(0, 0, 0), seg=20):
+    bpy.ops.mesh.primitive_torus_add(major_radius=R, minor_radius=r, major_segments=seg, minor_segments=6)
+    o = bpy.context.object; o.name = name
+    o.data.materials.append(material)
+    for p in o.data.polygons: p.use_smooth = True
+    o.parent = parent; o.location = loc; o.rotation_euler = rot
+    return o
+
+def blob(name, size, loc, material, parent, jitter=0.18, sub=2, rot=(0, 0, 0)):
+    """Pokrčená handra / vrecko: deformovaná ikosféra."""
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=sub, radius=1.0)
+    o = bpy.context.object; o.name = name
+    for v in o.data.vertices:
+        v.co *= 1 + (rng.random() - 0.5) * 2 * jitter
+    o.data.materials.append(material)
+    for p in o.data.polygons: p.use_smooth = True
+    o.parent = parent; o.location = loc; o.scale = size; o.rotation_euler = rot
+    return o
+
+def stain(name, r, loc, parent, n=18):
+    """Nepravidelná olejová škvrna na podlahe."""
+    bm = bmesh.new()
+    vs = []
+    ph = rng.random(3) * 6.28
+    for k in range(n):
+        a = 2 * math.pi * k / n
+        rr = r * (1 + 0.22 * math.sin(3 * a + ph[0]) + 0.12 * math.sin(5 * a + ph[1]) + 0.08 * math.sin(7 * a + ph[2]))
+        vs.append(bm.verts.new((math.cos(a) * rr, math.sin(a) * rr, 0)))
+    bm.faces.new(vs)
+    o = from_bm(name, bm, M["oil"], parent, smooth=False)
+    o.location = loc
+    return o
+
+def tool_group(name, loc, rot, parent=G):
+    g = empty(name, loc, parent); g.rotation_euler = rot
+    return g
+
+# Náradie je modelované v lokálnych osiach: dĺžka = Z, hrúbka = Y (kolmo na stenu), šírka = X.
+HANG = lambda tilt=0.0: (0, tilt, 0)                   # visí na stene (rovina XZ)
+LIE = lambda yaw: (math.pi / 2, 0, yaw)                # leží naplocho na doske
+
+def wrench(name, L, loc, rot, parent=G):
+    g = tool_group(name, loc, rot, parent)
+    w, t = 0.012 + L * 0.06, 0.007
+    box(name + "_s", (w * 0.72, t, L * 0.62), (0, 0, 0), M["chrome"], g)
+    ring(name + "_r", w * 0.62, w * 0.22, (0, 0, L * 0.36), M["chrome"], g, rot=(math.pi / 2, 0, 0), seg=16)
+    box(name + "_o", (w * 1.5, t * 1.1, w * 0.5), (0, 0, -L * 0.33), M["chrome"], g)
+    for sx in (-1, 1):
+        box(name + "_j", (w * 0.4, t * 1.1, w * 0.9), (sx * w * 0.55, 0, -L * 0.33 - w * 0.6), M["chrome"], g, rot=(0, sx * 0.25, 0))
+    return g
+
+def adj_wrench(name, L, loc, rot, parent=G):
+    g = tool_group(name, loc, rot, parent)
+    box(name + "_h", (0.03, 0.01, L * 0.7), (0, 0, -L * 0.12), M["chrome"], g, bevel=0.003)
+    box(name + "_head", (0.065, 0.014, 0.05), (0.008, 0, L * 0.3), M["chrome"], g, bevel=0.004)
+    box(name + "_jaw", (0.018, 0.014, 0.04), (0.03, 0, L * 0.3 + 0.04), M["chrome"], g)
+    cyl(name + "_hole", 0.007, 0.016, (0, 0, -L * 0.44), M["cavity"], g, axis="Y", verts=10)
+    return g
+
+def screwdriver(name, L, loc, rot, grip, parent=G):
+    g = tool_group(name, loc, rot, parent)
+    cyl(name + "_g", 0.014, L * 0.4, (0, 0, L * 0.3), grip, g, verts=12)
+    cyl(name + "_g2", 0.010, L * 0.06, (0, 0, L * 0.07), M["rubber"], g, verts=10)
+    cyl(name + "_sh", 0.0035, L * 0.55, (0, 0, -L * 0.25), M["chrome"], g, verts=8)
+    return g
+
+def hammer(name, loc, rot, parent=G, rubber_head=False):
+    g = tool_group(name, loc, rot, parent)
+    cyl(name + "_h", 0.013, 0.31, (0, 0, -0.02), M["wood"] if not rubber_head else M["rubber"], g, verts=10)
+    if rubber_head:
+        cyl(name + "_head", 0.032, 0.12, (0, 0, 0.14), M["rubber"], g, axis="X", verts=16)
+    else:
+        box(name + "_head", (0.12, 0.026, 0.03), (0.01, 0, 0.145), M["dark"], g, bevel=0.004)
+        box(name + "_claw", (0.04, 0.02, 0.02), (-0.06, 0, 0.152), M["dark"], g, rot=(0, -0.4, 0))
+    return g
+
+def pliers(name, loc, rot, grip, parent=G):
+    g = tool_group(name, loc, rot, parent)
+    for sx in (-1, 1):
+        box(name + "_jaw", (0.011, 0.008, 0.07), (sx * 0.004, 0, 0.075), M["chrome"], g, rot=(0, -sx * 0.06, 0))
+        box(name + "_grip", (0.013, 0.012, 0.12), (sx * 0.016, 0, -0.035), grip, g, rot=(0, sx * 0.16, 0), bevel=0.003)
+    cyl(name + "_pin", 0.008, 0.016, (0, 0, 0.035), M["chrome"], g, axis="Y", verts=10)
+    return g
+
+def ratchet(name, loc, rot, parent=G):
+    g = tool_group(name, loc, rot, parent)
+    cyl(name + "_h", 0.009, 0.2, (0, 0, -0.02), M["chrome"], g, verts=10)
+    cyl(name + "_grip", 0.012, 0.09, (0, 0, -0.07), M["rubber"], g, verts=10)
+    cyl(name + "_head", 0.02, 0.016, (0, 0, 0.09), M["chrome"], g, axis="Y", verts=16)
+    cyl(name + "_sq", 0.006, 0.02, (0, 0.015, 0.09), M["chrome"], g, axis="Y", verts=4)
+    return g
+
+def socket(name, r, loc, parent=G, h=None):
+    return cyl(name, r, h or r * 2.6, loc, M["chrome"], parent, verts=12)
+
+def spray_can(name, loc, rot=(0, 0, 0), parent=G, colors=("canBlue", "canYellow")):
+    g = tool_group(name, loc, rot, parent)
+    cyl(name + "_b", 0.033, 0.19, (0, 0, 0.095), M[colors[0]], g, verts=16)
+    cyl(name + "_band", 0.0335, 0.05, (0, 0, 0.13), M[colors[1]], g, verts=16)
+    cyl(name + "_cap", 0.02, 0.03, (0, 0, 0.205), M["dark"], g, verts=12)
+    return g
+
+def cardboard_box(name, size, loc, yaw=0.0, parent=G):
+    o = box(name, size, loc, M["cardboard"], parent, bevel=0.004, rot=(0, 0, yaw))
+    box(name + "_tape", (size[0] + 0.002, 0.05, 0.002), (loc[0], loc[1], loc[2] + size[2] / 2 + 0.001), M["cardboard"], parent, rot=(0, 0, yaw))
+    return o
+
+# ---- zadná stena: žlté skrine so šuflíkmi (jeden šuflík vytiahnutý)
+def drawer_unit(name, x0, x1, h, n, y_back=GD / 2 - 0.05, depth=0.65, top=True, opened=None):
+    opened = opened or {}
     w = x1 - x0; cx = (x0 + x1) / 2; cy = y_back - depth / 2
     g = empty(name, (0, 0, 0), G)
-    box(name + "_carcass", (w, depth, h), (cx, cy, h / 2 + 0.06), M["redDark"], g, bevel=0.01)
+    box(name + "_carcass", (w, depth, h), (cx, cy, h / 2 + 0.06), M["cabDark"], g, bevel=0.01)
     dh = (h - 0.1) / n
+    yf = y_back - depth - 0.015
     for i in range(n):
         z = 0.06 + 0.06 + dh * (i + 0.5)
-        box(f"{name}_d{i}", (w - 0.05, 0.04, dh - 0.018), (cx, y_back - depth - 0.015, z), M["red"], g, bevel=0.008)
-        box(f"{name}_h{i}", (w * 0.55, 0.03, 0.024), (cx, y_back - depth - 0.05, z + dh * 0.22), M["steel"], g, bevel=0.006)
+        d = opened.get(i, 0.0)
+        if d:
+            box(f"{name}_cav{i}", (w - 0.07, 0.006, dh - 0.03), (cx, y_back - depth - 0.004, z), M["cavity"], g)
+            tw, tz = w - 0.09, z - dh / 2 + 0.03            # zásuvka: dno + bočnice
+            box(f"{name}_tb{i}", (tw, 0.55, 0.008), (cx, yf - d + 0.3, tz), M["cabDark"], g)
+            for sx in (-1, 1):
+                box(f"{name}_ts{i}", (0.008, 0.55, dh - 0.05), (cx + sx * tw / 2, yf - d + 0.3, z - 0.005), M["cabDark"], g)
+            # obsah vytiahnutej zásuvky – nástrčné hlavice a kľúč
+            for k in range(7):
+                socket(f"{name}_so{i}_{k}", 0.009 + 0.0015 * k, (cx - tw / 2 + 0.06 + k * 0.075, yf - d + 0.07 + (k % 2) * 0.04, tz + 0.02), g)
+            wrench(f"{name}_dw{i}", 0.22, (cx + 0.05, yf - d + 0.17, tz + 0.008), LIE(1.48), g)
+            wrench(f"{name}_dw2{i}", 0.18, (cx - 0.12, yf - d + 0.2, tz + 0.016), LIE(1.62), g)
+        box(f"{name}_d{i}", (w - 0.05, 0.04, dh - 0.018), (cx, yf - d, z), M["cabYellow"], g, bevel=0.008)
+        box(f"{name}_h{i}", (w * 0.55, 0.03, 0.024), (cx, yf - d - 0.035, z + dh * 0.22), M["steel"], g, bevel=0.006)
     if top:
         box(name + "_top", (w + 0.04, depth + 0.04, 0.05), (cx, cy, h + 0.085), M["top"], g)
     for sx in (-w / 2 + 0.07, w / 2 - 0.07):
@@ -466,14 +606,198 @@ def drawer_unit(name, x0, x1, h, n, y_back=GD / 2 - 0.05, depth=0.65, top=True):
     return g
 
 drawer_unit("CabA", -3.55, -2.4, 1.0, 5)
-drawer_unit("CabB", -2.4, -1.25, 1.0, 5)
-drawer_unit("CabC", -1.25, -0.1, 1.0, 5)
-drawer_unit("TallD", 0.1, 1.45, 1.9, 9)
+drawer_unit("CabB", -2.4, -1.25, 1.0, 5, opened={3: 0.34})
+drawer_unit("CabC", -1.25, -0.1, 1.0, 5, opened={1: 0.12})
+drawer_unit("TallD", 0.1, 1.45, 1.9, 9, opened={4: 0.22})
 drawer_unit("TallE", 1.5, 2.3, 1.9, 7)
-box("Pegboard", (3.4, 0.03, 0.7), (-1.83, GD / 2 - 0.06, 1.55), M["shelf"], G)
-for i in range(9):
-    box(f"Tool{i}", (0.045, 0.02, 0.22 + 0.04 * (i % 3)), (-3.3 + i * 0.37, GD / 2 - 0.085, 1.52), M["steel"], G)
 box("Vise", (0.22, 0.18, 0.14), (-0.6, GD / 2 - 0.35, 1.19), M["dark"], G, bevel=0.01)
+box("ViseJaw", (0.16, 0.03, 0.07), (-0.6, GD / 2 - 0.47, 1.23), M["dark"], G, bevel=0.005)
+cyl("ViseScrew", 0.008, 0.2, (-0.6, GD / 2 - 0.58, 1.21), M["chrome"], G, axis="Y", verts=8)
+cyl("ViseBar", 0.006, 0.16, (-0.6, GD / 2 - 0.68, 1.21), M["chrome"], G, axis="X", verts=8)
+
+# ---- perforovaná doska s náradím (visí nad skrinkami)
+PN = 256
+py_, px_ = np.mgrid[0:PN, 0:PN]
+holes = ((px_ % 32 - 16) ** 2 + (py_ % 32 - 16) ** 2) < 20
+pb = 0.30 + (fbm(PN, (8, 16), (1, .5)) - 0.5) * 0.03
+pb = np.where(holes, 0.03, pb)
+TEX_PEG = save_tex("pegboard", np.stack([pb, pb * 1.01, pb * 1.03], axis=2))
+M["peg"] = mat("Pegboard", (1, 1, 1), 0.5, 0.5, tex=TEX_PEG)
+PY = GD / 2 - 0.06
+box("Pegboard", (3.4, 0.03, 0.72), (-1.83, PY, 1.56), M["peg"], G, uv=(0.2, 0.2))
+box("PegFrame", (3.44, 0.04, 0.03), (-1.83, PY - 0.005, 1.93), M["beam"], G)
+box("PegFrameB", (3.44, 0.04, 0.03), (-1.83, PY - 0.005, 1.19), M["beam"], G)
+TY = PY - 0.03                                         # rovina náradia pred doskou
+def hook(x, z):
+    cyl("Hook", 0.003, 0.05, (x, TY + 0.005, z), M["chrome"], G, axis="Y", verts=6)
+# sada očkoplochých kľúčov (odstupňované dĺžky)
+for i in range(10):
+    L = 0.13 + i * 0.018
+    x = -3.42 + i * 0.062
+    hook(x, 1.86)
+    wrench(f"WallWrench{i}", L, (x, TY, 1.86 - L * 0.36), HANG(0.0 if i != 6 else 0.12))
+# kladivá
+hook(-2.68, 1.86); hammer("Hammer", (-2.72, TY, 1.70), HANG(0.05))
+hook(-2.52, 1.86); hammer("Mallet", (-2.52, TY, 1.69), HANG(-0.04), rubber_head=True)
+# lišta so skrutkovačmi
+box("DriverRack", (0.5, 0.06, 0.02), (-2.15, TY - 0.02, 1.70), M["beam"], G)
+grips = [M["gripRed"], M["gripYellow"], M["gripRed"], M["gripYellow"], M["gripBlue"], M["gripRed"]]
+for i, gm in enumerate(grips):
+    L = 0.2 + (i % 3) * 0.04
+    screwdriver(f"Driver{i}", L, (-2.36 + i * 0.08, TY - 0.03, 1.70 + L * 0.02), HANG(0.0), gm)
+# kliešte
+for i, (gm, tilt) in enumerate(((M["gripRed"], 0.05), (M["gripBlue"], -0.08), (M["gripRed"], 0.0))):
+    hook(-1.75 + i * 0.09, 1.86)
+    pliers(f"Pliers{i}", (-1.75 + i * 0.09, TY, 1.74), HANG(tilt), gm)
+hook(-1.38, 1.86); adj_wrench("AdjWrench", 0.26, (-1.38, TY, 1.72), HANG(0.08))
+hook(-1.22, 1.86); ratchet("WallRatchet", (-1.22, TY, 1.74), HANG(-0.05))
+# pílka na kov
+sawg = tool_group("Hacksaw", (-0.85, TY, 1.62), HANG(0.0))
+box("Saw_top", (0.36, 0.012, 0.014), (0, 0, 0.06), M["gripBlue"], sawg)
+box("Saw_blade", (0.33, 0.004, 0.012), (0, 0, -0.04), M["chrome"], sawg)
+box("Saw_front", (0.014, 0.012, 0.11), (0.17, 0, 0.01), M["gripBlue"], sawg)
+box("Saw_grip", (0.03, 0.02, 0.11), (-0.18, 0, 0.0), M["rubber"], sawg, rot=(0, 0.25, 0), bevel=0.004)
+hook(-0.75, 1.86); hook(-0.95, 1.86)
+# zvinutý predlžovací kábel na háku
+hook(-0.42, 1.86)
+for k in range(4):
+    ring(f"Cable{k}", 0.11 + k * 0.004, 0.007, (-0.42 + k * 0.004, TY - 0.012 - k * 0.006, 1.74 - k * 0.006), M["gripYellow"], G, rot=(math.pi / 2, 0.15 * k, 0), seg=28)
+# papier so servisným záznamom
+box("Clipboard", (0.18, 0.006, 0.25), (-0.2, TY, 1.6), M["wood"], G, rot=(0, 0.04, 0))
+box("ClipPaper", (0.16, 0.004, 0.2), (-0.2, TY - 0.005, 1.585), M["paper"], G, rot=(0, 0.04, 0))
+box("Clip", (0.05, 0.012, 0.02), (-0.2, TY - 0.008, 1.71), M["chrome"], G)
+
+# ---- pracovná doska: veci "len tak položené"
+WT = 1.11                                              # horná plocha dosky
+adj_wrench("BenchAdj", 0.25, (-2.95, 3.38, WT + 0.007), LIE(0.55))
+wrench("BenchWrench", 0.22, (-2.62, 3.30, WT + 0.004), LIE(-0.35))
+ratchet("BenchRatchet", (-2.25, 3.42, WT + 0.009), LIE(1.9))
+socket("BenchSocket", 0.012, (-2.12, 3.28, WT + 0.016))
+# kufrík s hlavicami – otvorený
+box("SocketCase", (0.42, 0.26, 0.04), (-1.78, 3.52, WT + 0.02), M["gripBlue"], G, bevel=0.006)
+box("SocketCaseIn", (0.39, 0.23, 0.01), (-1.78, 3.52, WT + 0.041), M["rubber"], G)
+box("SocketLid", (0.42, 0.04, 0.26), (-1.78, 3.67, WT + 0.15), M["gripBlue"], G, rot=(-0.25, 0, 0), bevel=0.006)
+for k in range(12):
+    socket(f"CaseSocket{k}", 0.008 + 0.0012 * (k % 6), (-1.94 + (k % 6) * 0.062, 3.46 + (k // 6) * 0.1, WT + 0.06))
+blob("Rag", (0.16, 0.12, 0.03), (-1.32, 3.36, WT + 0.02), M["rag"], G, rot=(0, 0, 0.4))
+blob("RagFold", (0.07, 0.05, 0.025), (-1.24, 3.30, WT + 0.04), M["rag"], G, jitter=0.25)
+# hrnček s kávou
+cyl("Mug", 0.04, 0.095, (-1.0, 3.48, WT + 0.048), M["mug"], G, verts=16)
+cyl("MugCoffee", 0.036, 0.004, (-1.0, 3.48, WT + 0.09), M["oil"], G, verts=16)
+ring("MugHandle", 0.025, 0.007, (-0.955, 3.48, WT + 0.05), M["mug"], G, rot=(math.pi / 2, 0, 0), seg=12)
+spray_can("Spray1", (-0.82, 3.62, WT))
+spray_can("Spray2", (-1.12, 3.3, WT + 0.033), rot=(0, math.pi / 2, 0.3), colors=("gripRed", "dark"))
+# fľaša oleja + lievik
+box("OilBottle", (0.12, 0.07, 0.24), (-0.32, 3.62, WT + 0.12), M["canYellow"], G, bevel=0.012)
+cyl("OilCap", 0.018, 0.03, (-0.32, 3.62, WT + 0.255), M["dark"], G, verts=10)
+cyl("Funnel", 0.07, 0.1, (-0.16, 3.52, WT + 0.06), M["gripRed"], G, verts=16, r2=0.012, caps=False)
+# diagnostický tablet
+box("Tablet", (0.26, 0.18, 0.012), (-3.3, 3.6, WT + 0.06), M["dark"], G, rot=(-0.55, 0, 0.15), bevel=0.004)
+box("TabletScreen", (0.23, 0.15, 0.002), (-3.3, 3.594, WT + 0.065), M["screen"], G, rot=(-0.55, 0, 0.15))
+box("TabletStand", (0.2, 0.03, 0.08), (-3.3, 3.65, WT + 0.03), M["dark"], G, rot=(0, 0, 0.15))
+cyl("DiagCable", 0.004, 0.5, (-3.0, 3.45, WT + 0.004), M["rubber"], G, axis="X", verts=6, rot=(0, math.pi / 2, 0.6))
+# skrutky a matice
+for k in range(9):
+    cyl(f"Nut{k}", 0.008, 0.007, (-2.0 + rng.random() * 0.25, 3.2 + rng.random() * 0.1, WT + 0.004), M["chrome"], G, verts=6)
+
+# ---- nad vysokými skriňami: krabice, kufor s náradím, navijak hadice
+TOPZ = 1.9 + 0.11
+cardboard_box("Box1", (0.42, 0.34, 0.26), (0.38, 3.5, TOPZ + 0.13), 0.06)
+cardboard_box("Box2", (0.32, 0.28, 0.2), (0.4, 3.5, TOPZ + 0.36), -0.12)
+cardboard_box("Box3", (0.36, 0.3, 0.18), (0.85, 3.48, TOPZ + 0.09), 0.2)
+box("ToolCase", (0.5, 0.24, 0.2), (1.25, 3.45, TOPZ + 0.1), M["jack"], G, bevel=0.015)
+box("ToolCaseHandle", (0.2, 0.03, 0.03), (1.25, 3.45, TOPZ + 0.22), M["dark"], G)
+spray_can("SprayTop", (1.7, 3.45, TOPZ))
+spray_can("SprayTop2", (1.8, 3.55, TOPZ), colors=("canGreen", "dark"))
+# navijak vzduchovej hadice na stene
+reel = tool_group("HoseReel", (1.95, GD / 2 - 0.12, 2.55), (0, 0, 0))
+cyl("ReelDisc", 0.22, 0.012, (0, -0.01, 0), M["dark"], reel, axis="Y", verts=24)              # zadný kotúč
+for k in range(5):                                                                            # navinutá hadica
+    ring(f"ReelCoil{k}", 0.15, 0.011, (0, -0.04 - k * 0.026, 0), M["gripYellow"], reel, rot=(math.pi / 2, 0, 0), seg=24)
+    ring(f"ReelCoilO{k}", 0.175, 0.011, (0, -0.05 - k * 0.026, 0), M["gripYellow"], reel, rot=(math.pi / 2, 0, 0), seg=24)
+cyl("ReelDrum", 0.13, 0.15, (0, -0.1, 0), M["dark"], reel, axis="Y", verts=20)
+ring("ReelRim", 0.215, 0.012, (0, -0.19, 0), M["gripRed"], reel, rot=(math.pi / 2, 0, 0), seg=28)   # predný rám – otvorený
+for k in range(4):
+    sp = box(f"ReelSpoke{k}", (0.42, 0.012, 0.02), (0, -0.19, 0), M["gripRed"], reel)
+    sp.rotation_euler = (0, k * math.pi / 4, 0)
+cyl("ReelHub", 0.035, 0.05, (0, -0.2, 0), M["chrome"], reel, axis="Y", verts=12)
+box("ReelMount", (0.12, 0.06, 0.5), (0, 0.02, 0), M["dark"], reel)
+# hadica visí z navijaka dolu k zemi
+pts_h = [(0.18, -0.11, -0.05), (0.26, -0.13, -0.35), (0.3, -0.18, -0.75), (0.28, -0.25, -1.1)]
+for k in range(len(pts_h) - 1):
+    a, b = Vector(pts_h[k]), Vector(pts_h[k + 1]); dvec = b - a
+    c = cyl(f"Hose{k}", 0.009, dvec.length, tuple((a + b) / 2), M["gripYellow"], reel, verts=8)
+    c.rotation_euler = dvec.to_track_quat("Z", "Y").to_euler()
+cyl("HoseCoupler", 0.014, 0.06, pts_h[-1], M["chrome"], reel, verts=8)
+
+# ---- podlaha: zdvihák, stojany, vanička, ležadlo, kužele, kôš, metla
+jk = tool_group("FloorJack", (-2.45, 2.45, 0), (0, 0, 0.65))
+box("Jack_body", (0.26, 0.62, 0.11), (0, 0, 0.1), M["jack"], jk, bevel=0.012)
+box("Jack_arm", (0.12, 0.42, 0.05), (0, 0.18, 0.19), M["jack"], jk, rot=(0.18, 0, 0))
+cyl("Jack_saddle", 0.06, 0.03, (0, 0.38, 0.24), M["dark"], jk, verts=14)
+for sx in (-1, 1):
+    cyl("Jack_wheelF", 0.035, 0.03, (sx * 0.13, 0.27, 0.035), M["dark"], jk, axis="X", verts=12)
+    cyl("Jack_wheelB", 0.05, 0.035, (sx * 0.15, -0.26, 0.05), M["dark"], jk, axis="X", verts=12)
+hdl = cyl("Jack_handle", 0.014, 1.0, (0, -0.68, 0.42), M["dark"], jk, verts=8)
+hdl.rotation_euler = (-0.95, 0, 0)
+cyl("Jack_grip", 0.02, 0.14, (0, -1.07, 0.71), M["rubber"], jk, verts=8, rot=(-0.95, 0, 0))
+for i, (x, y, yaw) in enumerate(((-2.0, 2.95, 0.3), (-1.65, 2.8, -0.2))):
+    st = tool_group(f"JackStand{i}", (x, y, 0), (0, 0, yaw))
+    cyl("Stand_base", 0.13, 0.32, (0, 0, 0.16), M["gripRed"], st, verts=4, r2=0.035)
+    cyl("Stand_post", 0.022, 0.2, (0, 0, 0.38), M["chrome"], st, verts=10)
+    box("Stand_saddle", (0.07, 0.05, 0.025), (0, 0, 0.48), M["dark"], st)
+stain("Stain0", 0.22, (-2.3, 2.3, 0.0012), G)
+stain("Stain1", 0.12, (-1.9, 2.75, 0.0012), G)
+# vanička na olej + škvrny
+cyl("DrainPan", 0.3, 0.07, (-2.35, -3.25, 0.035), M["dark"], G, verts=24, r2=0.26)
+cyl("DrainOil", 0.25, 0.004, (-2.35, -3.25, 0.065), M["oil"], G, verts=24)
+stain("Stain2", 0.3, (-2.05, -2.9, 0.0012), G)
+stain("Stain3", 0.14, (-2.75, -2.75, 0.0012), G)
+stain("Stain4", 0.18, (1.9, -3.35, 0.0012), G)
+# montážne ležadlo
+cr = tool_group("Creeper", (2.55, -3.2, 0), (0, 0, 0.32))
+box("Creeper_board", (0.46, 0.98, 0.03), (0, 0, 0.1), M["dark"], cr, bevel=0.01)
+box("Creeper_pad", (0.4, 0.3, 0.035), (0, 0.32, 0.128), M["rubber"], cr, bevel=0.012)
+for sx in (-1, 1):
+    for sy in (-0.42, 0, 0.42):
+        cyl("Creeper_caster", 0.035, 0.03, (sx * 0.19, sy, 0.04), M["rubber"], cr, axis="X", verts=10)
+# kužele
+cyl("Cone1", 0.14, 0.45, (3.35, -2.55, 0.225), M["orange"], G, verts=16, r2=0.025)
+box("Cone1Base", (0.32, 0.32, 0.03), (3.35, -2.55, 0.015), M["orange"], G)
+cn = cyl("Cone2", 0.14, 0.45, (3.05, -2.25, 0.14), M["orange"], G, verts=16, r2=0.025)   # prevrátený
+cn.rotation_euler = (math.pi / 2 - 0.3, 0, 0.9)
+# kôš na odpad + handra na zemi
+cyl("Bin", 0.2, 0.55, (-2.95, -3.55, 0.275), M["gripBlue"], G, verts=20, r2=0.22, caps=True)
+cyl("BinRim", 0.225, 0.03, (-2.95, -3.55, 0.55), M["dark"], G, verts=20)
+blob("BinRag", (0.1, 0.08, 0.06), (-2.92, -3.5, 0.58), M["rag2"], G)
+blob("FloorRag", (0.13, 0.09, 0.012), (-2.6, -2.95, 0.01), M["rag2"], G, jitter=0.3, rot=(0, 0, 0.8))
+# metla opretá o pravú stenu
+br = tool_group("Broom", (GW / 2 - 0.12, -1.7, 0.0), (0.0, -0.18, 0.0))
+cyl("Broom_stick", 0.012, 1.35, (0, 0, 0.75), M["wood"], br, verts=8)
+box("Broom_head", (0.06, 0.32, 0.06), (0, 0, 0.06), M["gripRed"], br)
+box("Broom_bristle", (0.05, 0.3, 0.06), (0, 0, 0.0), M["rubber"], br)
+# vozík s náradím pred vysokými skriňami
+cart = tool_group("ToolCart", (1.95, 2.72, 0), (0, 0, -0.18))
+box("Cart_body", (0.62, 0.4, 0.62), (0, 0, 0.42), M["cabYellow"], cart, bevel=0.01)
+for k in range(3):
+    box("Cart_drawer", (0.58, 0.01, 0.17), (0, -0.205, 0.22 + k * 0.19), M["cabDark"], cart)
+    box("Cart_pull", (0.3, 0.02, 0.02), (0, -0.215, 0.27 + k * 0.19), M["steel"], cart)
+box("Cart_top", (0.66, 0.44, 0.03), (0, 0, 0.745), M["dark"], cart)
+box("Cart_handle", (0.03, 0.03, 0.2), (0.33, 0, 0.84), M["chrome"], cart)
+for sx in (-0.25, 0.25):
+    for sy in (-0.15, 0.15):
+        cyl("Cart_wheel", 0.045, 0.03, (sx, sy, 0.045), M["dark"], cart, axis="X", verts=10)
+wrench("CartWrench", 0.2, (-0.1, -0.05, 0.765), LIE(0.9), cart)
+blob("CartRag", (0.12, 0.09, 0.025), (0.15, 0.08, 0.78), M["rag"], cart)
+box("Multimeter", (0.09, 0.16, 0.035), (-0.2, 0.1, 0.78), M["gripYellow"], cart, rot=(0, 0, 0.3), bevel=0.006)
+
+# ---- strop: elektroinštalačné rúrky a káblové žľaby
+for i, x in enumerate((-2.9, 2.9)):
+    box(f"CableTray{i}", (0.2, GD - 0.4, 0.05), (x, 0, GH - 0.38), M["conduit"], G)
+    for y in (-3.0, -1.3, 1.3, 3.0):
+        box("TrayHanger", (0.02, 0.02, 0.06), (x, y, GH - 0.33), M["conduit"], G)
+for i, z in enumerate((GH - 0.12, GH - 0.18)):
+    cyl(f"Conduit{i}", 0.014, GD - 0.2, (-GW / 2 + 0.1 + i * 0.04, 0, z), M["conduit"], G, axis="Y", verts=8)
 
 # ---- ľavá stena: regál s pneumatikami
 rg = empty("TyreRack", (0, 0, 0), G)
@@ -529,28 +853,92 @@ for i in range(24):
 torus("TurntableInner", 0.9, 0.012, (0, 0, 0.012), M["turn"], CAR)
 
 # ================================================================== AUTO
-CAR_LEN = 4.72
+CAR_LEN = 4.69                                  # Škoda Octavia IV RS
+def glass_mat(name, color, alpha, rough=0.04, emit=None, emit_strength=0.0):
+    m = mat(name, color, 0.0, rough, emit=emit, emit_strength=emit_strength)
+    b = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    b.inputs["Alpha"].default_value = alpha
+    for attr, val in (("surface_render_method", "BLENDED"), ("blend_method", "BLEND")):
+        try: setattr(m, attr, val)
+        except Exception: pass
+    return m
+
+CM = {
+    "glass": glass_mat("CarGlass", (0.015, 0.02, 0.025), 0.42),
+    "lens": glass_mat("HeadlightGlass", (0.8, 0.82, 0.85), 0.14, 0.02),
+    "tail": glass_mat("TaillightGlass", (0.06, 0.002, 0.002), 0.9, 0.03),                                  # tmavé (dymové) zadné sklo
+    "tailLed": mat("TailLed", (0.10, 0.004, 0.003), 0.0, 0.3, emit=(0.5, 0.01, 0.004), emit_strength=0.2),
+    "led": mat("HeadLed", (0.95, 0.96, 1.0), 0.0, 0.2, emit=(0.9, 0.95, 1.0), emit_strength=1.2),
+    "amber": mat("SignalAmber", (0.9, 0.45, 0.02), 0.0, 0.3),
+    "chrome": mat("CarChrome", (0.85, 0.85, 0.88), 1.0, 0.08),
+    "mirror": mat("MirrorChrome", (0.9, 0.9, 0.92), 1.0, 0.02),
+    "gloss": mat("BlackGloss", (0.012, 0.012, 0.014), 0.2, 0.12, coat=1.0),
+    "matte": mat("BlackMatte", (0.02, 0.02, 0.022), 0.0, 0.7),
+    "frit": mat("GlassFrit", (0.005, 0.005, 0.006), 0.0, 0.3),
+    "rim": mat("RimAlloy", (0.55, 0.56, 0.58), 1.0, 0.25),
+    "caliper": mat("BrakeCaliper", (0.12, 0.12, 0.13), 0.6, 0.4),
+    "disc": mat("BrakeDisc", (0.35, 0.35, 0.36), 1.0, 0.45),
+    "int": mat("InteriorDark", (0.025, 0.025, 0.027), 0.0, 0.65),
+    "seat": mat("SeatFabric", (0.04, 0.04, 0.045), 0.0, 0.9),
+    "intChrome": mat("InteriorChrome", (0.6, 0.6, 0.62), 1.0, 0.25),
+}
+# poradie je dôležité – prvé zhodné pravidlo vyhráva (kľúče = podreťazce názvu objektu, malé písmená)
+CAR_RULES = [
+    (("logos_badges", "logos_black", "rim_badge", "vrs_logo", "front vrs_sub2", "red_icom", "spz_zaslepka"), None),       # logá Škoda/vRS → preč
+    (("ext_tyre",), "tire"), (("brakedisk",), "disc"), (("rim_metal", "bbs_metal"), "caliper"), (("rim_oz",), "rim"),
+    (("plate",), "plate"),
+    (("windshield",), "frit"), (("glass_mirrors", "type_r_tran"), "mirror"),
+    (("taillight_glass", "glass_reflex"), "tail"),
+    (("red light", "r_lights", "rt_ch", "rtl_sl"), "tailLed"),
+    (("hlglass", "hlsx", "glass_f_fog", "glass_front_bulbs", "hl_glass"), "lens"),
+    (("desirefx", "lights_fog", "hl_signal"), "led"), (("mirror_signal",), "amber"),
+    (("ext_glass", "roof_light_glass"), "glass"),
+    (("ext_body", "body_paint", "carpaint", "boot_paint", "sensors"), "body"),
+    (("chrome",), "chrome"),
+    (("ext_plastic_lesk", "ext_pl_lesk", "logos_black", "ext_plastic", "frmask", "lpframe"), "gloss"),
+    (("matte_black", "black", "rubber", "grill", "fbg", "plastick", "105ee", "#28r", "#40e"), "matte"),
+    (("seat", "recaro", "carpet"), "seat"),
+]
+def car_material(name):
+    n = name.lower()
+    if n.startswith(("int", "rs4_int", "rs_gau", "sym_", "sw_", "sw ", "dash", "vw_golfgti_06", "polysurface_int", "interior")) or "dasboard" in n or "gauges" in n or "octavia_icon" in n or "int_" in n:
+        return CM["intChrome"] if "chrome slot" in n else CM["seat"] if ("seat" in n or "recaro" in n) else CM["int"]
+    for keys, key in CAR_RULES:
+        if any(k in n for k in keys):
+            return "DELETE" if key is None else CM.get(key) or M[key]
+    return CM["matte"]
+
+def decimate_ratio(name, mat_, tris):
+    if tris < 900: return 1.0
+    if mat_ in (CM["int"], CM["seat"], CM["intChrome"]): r = 0.05
+    elif mat_ is M["body"]: r = 0.32
+    elif mat_ in (CM["glass"], CM["frit"]): r = 0.35
+    elif mat_ is CM["rim"]: r = 0.22
+    elif mat_ is M["tire"]: r = 1.0
+    elif mat_ in (CM["gloss"], CM["matte"]): r = 0.35        # lišty okien – pri silnom zjednodušení robia ostne
+    else: r = 0.12
+    return max(r, 300 / tris)
+
 def import_car():
-    """BMW M4 F82 Razor 2014 by vecarz (Sketchfab, CC BY 4.0) – vyčistené: bez log, nálepiek a ŠPZ."""
+    """Škoda Octavia (MK4) RS by DR1KING100K (Sketchfab, CC BY 4.0) – prefarbené na červenú metalízu, bez log, zjednodušené pre web."""
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=SRC_CAR)
     new = [o for o in bpy.data.objects if o not in before]
+    stats = {}
     for o in list(new):
-        mats = [s.material.name for s in o.material_slots if s.material] if o.type == "MESH" else []
-        if o.type == "MESH" and ("dff" in o.name or "spoon" in mats):
-            new.remove(o); bpy.data.objects.remove(o, do_unlink=True)
-    paint, rubber = M["body"], M["tire"]
-    for o in new:
         if o.type != "MESH":
             continue
-        for slot in o.material_slots:
-            n = slot.material.name if slot.material else ""
-            if n in ("chassis.009", "chassis.9", "chassis.013", "chassis.017"):   # livrea, nálepky, logá BMW/M4
-                slot.material = paint
-            elif n == "plate_ok.0":                                               # ŠPZ → čistá
-                slot.material = M["plate"]
-            elif n == "wheel.009":                                                # bok pneumatiky s nápismi
-                slot.material = rubber
+        m = car_material(o.name)
+        if m == "DELETE":
+            new.remove(o); bpy.data.objects.remove(o, do_unlink=True); continue
+        o.data.materials.clear(); o.data.materials.append(m)
+        for p in o.data.polygons: p.material_index = 0
+        tris = sum(len(p.vertices) - 2 for p in o.data.polygons)
+        r = decimate_ratio(o.name, m, tris)
+        if r < 1.0:
+            d = o.modifiers.new("dec", "DECIMATE"); d.ratio = r; d.use_collapse_triangulate = True
+        stats[m.name] = stats.get(m.name, 0) + int(tris * r)
+    print("CAR_TRIS", sum(stats.values()), sorted(stats.items(), key=lambda kv: -kv[1]))
     bpy.context.view_layer.update()
     mn = Vector((1e9,) * 3); mx = Vector((-1e9,) * 3)
     for o in new:
@@ -566,7 +954,7 @@ def import_car():
     cc = (mn + mx) / 2
     pivot.location = (-cc.x, -cc.y, -mn.z)
     holder.scale = (s, s, s)
-    holder.rotation_euler = (0, 0, math.pi)        # nos do -y (k vrátam)
+    holder.rotation_euler = (0, 0, 0)              # model má nos už v -y (k vrátam)
     bpy.context.view_layer.update()
     return [o for o in new if o.name in bpy.data.objects and o.type == "MESH"]
 
@@ -601,7 +989,7 @@ fr = min((w for w in wheels if w[0] > 0), key=lambda w: w[1])
 rr = max((w for w in wheels if w[0] > 0), key=lambda w: w[1])
 _ws = []
 for o in car_meshes:
-    if "windscreen" in o.name:
+    if "windscreen" in o.name.lower() or "windshield" in o.name.lower():
         a = np.array([inv @ o.matrix_world @ Vector(v) for v in o.bound_box]); _ws.append((a.min(0) + a.max(0)) / 2)
 ws_c = min(_ws, key=lambda c: c[1]) if _ws else np.array([0, -0.5, 1.05])     # predné (nie zadné) sklo
 hood_y = ymin + (ws_c[1] - ymin) * 0.40
@@ -629,8 +1017,13 @@ for o in bpy.data.objects:
         bpy.context.view_layer.objects.active = o
         for s in bpy.context.selected_objects: s.select_set(False)
         o.select_set(True)
+        if o.data.users > 1:
+            o.data = o.data.copy()
         for m in list(o.modifiers):
-            bpy.ops.object.modifier_apply(modifier=m.name)
+            try:
+                bpy.ops.object.modifier_apply(modifier=m.name)
+            except Exception as e:
+                print("MODIFIER_FAIL", o.name, m.name, e)
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "tools", "garage.blend"))
 bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_apply=True, export_yup=True,

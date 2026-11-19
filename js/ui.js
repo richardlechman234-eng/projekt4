@@ -7,18 +7,23 @@ const CO = window.PLS || {};
 
 /* ------------------------------------------------------------ detail služby */
 const svcDlg = $("#svc-dlg");
-export function openService(id) {
+// side = bočný panel pri priblíženom aute (bez fotky, bez stmavenia), inak klasické okno
+export function openService(id, { side = false } = {}) {
   const s = byId(id);
   if (!s) return;
+  if (svcDlg.open && svcDlg.classList.contains("side") !== side) svcDlg.close();
+  svcDlg.classList.toggle("side", side);
+  document.documentElement.classList.toggle("svc-side", side);
   const idx = SERVICES.indexOf(s) + 1;
   svcDlg.innerHTML = `
     <div class="sheet" role="document">
       <button class="x" type="button" data-close aria-label="Zavrieť">×</button>
-      <div class="ph">${s.photo ? `<img src="${s.photo}" alt="" loading="lazy">` : ""}${s.icon}</div>
+      ${side ? "" : `<div class="ph">${s.photo ? `<img src="${s.photo}" alt="" loading="lazy">` : ""}${s.icon}</div>`}
       <div class="body">
         <p class="eyebrow">${String(idx).padStart(2, "0")} · Služba</p>
         <h3 id="svc-title">${esc(s.title)}</h3>
         <p class="intro">${esc(s.intro)}</p>
+        ${s.call && CO.phone ? `<a class="callbig" href="tel:${esc(CO.phoneHref)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg><span><small>Zavolajte nám</small>${esc(CO.phone)}</span></a>` : ""}
         <h4>Čo to môže zahŕňať</h4>
         <ul>${s.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
         <p class="note">${esc(s.note)}</p>
@@ -29,7 +34,8 @@ export function openService(id) {
       </div>
     </div>`;
   svcDlg.setAttribute("aria-labelledby", "svc-title");
-  if (!svcDlg.open) svcDlg.showModal();
+  if (!svcDlg.open) side ? svcDlg.show() : svcDlg.showModal();
+  if (side) svcDlg.querySelector(".x")?.focus({ preventScroll: true });
 }
 
 /* ------------------------------------------------------------ objednávka */
@@ -213,11 +219,15 @@ export function initUi() {
     if (!t) return;
     if (t.hasAttribute("data-close")) t.closest("dialog")?.close();
     else if (t.hasAttribute("data-book")) { e.preventDefault(); openBooking(t.dataset.book || "servis"); }
-    else if (t.hasAttribute("data-open")) { e.preventDefault(); openService(t.dataset.open); }
+    else if (t.hasAttribute("data-open")) { e.preventDefault(); (t.closest(".scene") && window.__openSvc ? window.__openSvc : openService)(t.dataset.open); }
   });
   // klik na pozadie (mimo okna) zavrie dialóg
   [svcDlg, bkDlg].forEach((dlg) => dlg.addEventListener("mousedown", (e) => { if (e.target === dlg) dlg.close(); }));
   [svcDlg, bkDlg].forEach((dlg) => dlg.addEventListener("close", () => { document.documentElement.style.overflow = ""; }));
+  svcDlg.addEventListener("close", () => document.documentElement.classList.remove("svc-side"));
+  // bočný panel nie je modálny → Escape a odscrollovanie ho zavrú ručne
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && svcDlg.open && svcDlg.classList.contains("side")) svcDlg.close(); });
+  addEventListener("scroll", () => { if (svcDlg.open && svcDlg.classList.contains("side") && scrollY > innerHeight * 0.45) svcDlg.close(); }, { passive: true });
   [svcDlg, bkDlg].forEach((dlg) => dlg.addEventListener("cancel", () => {}));
 
   // zoznam služieb pod scénou
