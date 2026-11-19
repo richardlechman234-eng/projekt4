@@ -62,7 +62,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=8");
+  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=9");
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {

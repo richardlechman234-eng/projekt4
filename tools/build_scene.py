@@ -408,7 +408,8 @@ sw = FW / 2 - OW / 2
 box("FacadeL", (sw, 0.08, FH), (-(OW / 2 + sw / 2), FF - 0.04, FH / 2 - 0.05), M["wall"], fs, uv=(1.0, 1.0))
 box("FacadeR", (sw, 0.08, FH), ((OW / 2 + sw / 2), FF - 0.04, FH / 2 - 0.05), M["wall"], fs, uv=(1.0, 1.0))
 box("FacadeTop", (OW, 0.08, FH - OH), (0, FF - 0.04, OH + (FH - OH) / 2 - 0.05), M["wall"], fs, uv=(1.0, 1.0))
-box("Plinth", (FW, 0.12, 0.45), (0, FF - 0.1, 0.2), M["beam"], fs)
+for sx in (-1, 1):    # sokel len vedľa vrát – otvor ostáva voľný
+    box(f"Plinth{sx}", (sw - 0.2, 0.12, 0.45), (sx * (OW / 2 + 0.2 + (sw - 0.2) / 2), FF - 0.1, 0.2), M["beam"], fs)
 box("Cornice", (FW + 0.3, 0.4, 0.3), (0, FF - 0.12, FH - 0.05), M["beam"], fs)
 for sx in (-1, 1):
     box(f"Pilaster{sx}", (0.35, 0.18, FH), (sx * (FW / 2 - 0.17), FF - 0.12, FH / 2 - 0.05), M["beam"], fs)
