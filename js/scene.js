@@ -14,8 +14,8 @@ const KEYS = [
   { p: 0.30, pos: [0, 1.45, 11.5], tgt: [0, 1.10, 2.5], fov: 0 },
   { p: 0.47, pos: [0, 1.40, 6.6], tgt: [0, 0.75, 1.0], fov: 0 },
   { p: 0.58, pos: [0, 1.40, 6.6], tgt: [0, 0.75, 1.0], fov: 0 },
-  { p: 0.70, pos: [-1.4, 1.55, 4.6], tgt: [0, 0.80, 0.3], fov: 6 },
-  { p: 1.00, pos: [-3.0, 1.70, 3.55], tgt: [0.5, 0.60, -0.4], fov: 14 },
+  { p: 0.70, pos: [1.4, 1.55, 4.6], tgt: [0, 0.80, 0.3], fov: 6 },
+  { p: 1.00, pos: [3.05, 1.70, 3.5], tgt: [-0.45, 0.60, -0.45], fov: 14 },
 ];
 const YAW_END = -1.95;      // ~ -112° → bok + zadná tretina (výfuk) ku kamere
 const toThree = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // Blender → three
@@ -62,7 +62,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=4");
+  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=5");
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {

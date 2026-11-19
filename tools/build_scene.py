@@ -385,8 +385,6 @@ for lv, z in enumerate((1.57, 2.07)):
         cm = cans[(i + lv) % 4]
         hh = 0.26 if i % 3 else 0.32
         box(f"Can{lv}_{i}", (0.16, 0.14, hh), (SX - 0.02, 0.05 + i * 0.22, z + hh / 2 + 0.02), cm, sh, bevel=0.01)
-cyl("Compressor", 0.24, 0.9, (GW / 2 - 0.4, 2.9, 0.3), M["red"], G, axis="Y", verts=24)
-box("CompressorMotor", (0.3, 0.3, 0.25), (GW / 2 - 0.4, 2.9, 0.65), M["dark"], G, bevel=0.02)
 cyl("Extinguisher", 0.08, 0.5, (GW / 2 - 0.12, FY + 0.6, 0.85), M["extRed"], G, verts=16)
 cyl("ExtinguisherTop", 0.03, 0.08, (GW / 2 - 0.12, FY + 0.6, 1.14), M["dark"], G, verts=10)
 box("ExtSign", (0.02, 0.22, 0.22), (GW / 2 - 0.02, FY + 0.6, 1.45), M["red"], G)
@@ -494,11 +492,11 @@ ex = rear.mean(0) if len(rear) else np.array([0.45, ymax, 0.3])
 ANCH = {
     "klima": (0.0, ymin + 0.02, 0.36),                       # kondenzátor za predným nárazníkom
     "motor": (0.0, hood_y, top_z(hood_y) + 0.06),            # kapota
-    "sklo": (ws_c[0], ws_c[1], ws_c[2] + 0.14),              # čelné sklo
+    "sklo": (ws_c[0], ws_c[1] + 0.12, ws_c[2] + 0.24),              # čelné sklo
     "pneu": (fr[0] + 0.14, fr[1], fr[2]),                    # predné koleso
     "servis": (rr[0] + 0.14, rr[1], rr[2]),                  # zadné koleso – brzdy, olej, podvozok
     "diag": (0.62, ws_c[1] + 0.55, 0.95),                    # kabína – diagnostická zásuvka pri palubovke
-    "odtah": (xmax - 0.25, ymin + 0.12, 0.28),               # ťažné oko vpredu vpravo
+    "odtah": (xmax - 0.05, ymin + 0.25, 0.24),               # ťažné oko vpredu vpravo
     "stk": (float(ex[0]), ymax + 0.04, float(ex[2])),        # výfuk – emisná kontrola
 }
 for k, v in ANCH.items():
