@@ -3,6 +3,11 @@ import { SERVICES } from "./services.js";
 import { POSTER } from "./poster-data.js";
 import { calloutQuery, layoutCallouts, clearCallouts, resetCalloutBounds } from "./callouts.js";
 
+// po obnovení stránky začni vždy hore pri garáži (prehliadač by inak skočil na posledné miesto / #kontakt)
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+if (location.hash && location.hash !== "#objednavka") history.replaceState(null, "", location.pathname + location.search);
+scrollTo(0, 0);
+
 initUi();
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
