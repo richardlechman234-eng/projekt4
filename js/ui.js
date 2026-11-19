@@ -64,7 +64,7 @@ function bookingForm(selected) {
       <div class="f"><label for="f-date">Dátum (Po – Pi)</label>
         <input id="f-date" name="date" type="date" min="${min}" max="${iso(max)}" value="${min}" required>
         <span class="err" id="e-date">Vyberte pracovný deň (pondelok až piatok).</span></div>
-      <div class="f"><span class="sr" id="slot-l">Čas</span><label id="slot-lab" style="display:block">Čas</label>
+      <div class="f"><span class="lbl" id="slot-lab">Čas</span>
         <div class="slots" role="radiogroup" aria-labelledby="slot-lab" id="slots"></div>
         <span class="err" id="e-slot">Vyberte čas.</span></div>
       <div class="f"><label for="f-name">Meno a priezvisko</label><input id="f-name" name="name" autocomplete="name" required><span class="err">Zadajte meno.</span></div>
@@ -75,8 +75,8 @@ function bookingForm(selected) {
       <div class="f full"><label for="f-note">Poznámka (nepovinné)</label><textarea id="f-note" name="note" placeholder="Čo auto robí, od kedy, čo ste už skúšali…"></textarea></div>
       <div class="f hp" aria-hidden="true"><label>Web <input name="web" tabindex="-1" autocomplete="off"></label></div>
       <div class="f full"><label class="consent"><input type="checkbox" id="f-ok" required>
-        <span>Súhlasím so spracúvaním osobných údajov na účely vybavenia objednávky podľa <a href="zasady-ochrany-osobnych-udajov.html" target="_blank" rel="noopener">Zásad ochrany osobných údajov</a>.</span></label>
-        <span class="err" id="e-ok">Na odoslanie je potrebný súhlas.</span></div>
+        <span>Beriem na vedomie, že moje osobné údaje použijete na vybavenie objednávky podľa <a href="zasady-ochrany-osobnych-udajov.html" target="_blank" rel="noopener">Zásad ochrany osobných údajov</a>.</span></label>
+        <span class="err" id="e-ok">Na odoslanie je potrebné potvrdiť, že ste sa so zásadami oboznámili.</span></div>
     </div>
     <div class="row" style="margin-top:22px">
       <button class="btn o" type="submit">Odoslať objednávku</button>
@@ -129,7 +129,7 @@ function submit(form) {
     `Objednávka servisu – ${CO.name || "PLS GROUP"}`, "",
     `Služba: ${svc}`, `Termín: ${fmtDate(v("date"))}, ${t}`, `Meno: ${v("name")}`, `Telefón: ${v("tel")}`, `E-mail: ${v("mail")}`,
     `Vozidlo: ${v("car")}${v("spz") ? " (ŠPZ " + v("spz") + ")" : ""}`, v("note") ? `Poznámka: ${v("note")}` : "",
-    "", "Súhlasím so spracúvaním osobných údajov na účely vybavenia objednávky."
+    "", "Beriem na vedomie Zásady ochrany osobných údajov."
   ].filter((l, i, a) => l !== "" || a[i - 1] !== "");
   const body = lines.join("\n");
   const subject = `Objednávka: ${svc} – ${fmtDate(v("date"))} ${t}`;
@@ -143,7 +143,7 @@ function submit(form) {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ _subject: subject, sluzba: svc, termin: `${fmtDate(v("date"))}, ${t}`, meno: v("name"), telefon: v("tel"),
-      email: v("mail"), _replyto: v("mail"), vozidlo: v("car"), spz: v("spz"), poznamka: v("note"), suhlas_gdpr: "áno" }),
+      email: v("mail"), _replyto: v("mail"), vozidlo: v("car"), spz: v("spz"), poznamka: v("note"), zasady_gdpr: "beriem na vedomie" }),
   }).then((r) => {
     if (!r.ok) throw new Error(String(r.status));
     try { sessionStorage.setItem("pls-sent", String(Date.now())); } catch (e) {}

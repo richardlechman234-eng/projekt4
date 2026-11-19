@@ -293,7 +293,8 @@ dialog.side .body{padding:clamp(24px,3.4vw,52px)}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
 .f{display:flex;flex-direction:column;gap:5px}
 .f.full{grid-column:1/-1}
-.f label{font-family:var(--head);font-weight:700;font-size:16px;letter-spacing:.1em;text-transform:uppercase}
+.f .lbl{display:block}
+.f label,.f .lbl{font-family:var(--head);font-weight:700;font-size:16px;letter-spacing:.1em;text-transform:uppercase}
 .f input,.f select,.f textarea{font:inherit;font-size:17px;padding:11px 12px;border:2px solid var(--k);background:var(--w);color:var(--k);border-radius:0;width:100%}
 .f textarea{min-height:84px;resize:vertical}
 .f input:focus,.f select:focus,.f textarea:focus{outline:3px solid var(--o);outline-offset:0}
