@@ -31,7 +31,7 @@ Statická stránka – iba HTML/CSS/JS, **bez servera a bez build kroku**. Súbo
 | `js/extras.js` | Obdĺžniky služieb, cenník, Google hodnotenie, sezónny oznam, mobilná lišta, Plausible |
 | `js/poster-data.js` | Vygenerované pozície bublín na statických obrázkoch |
 | `css/style.css` | Všetky štýly; mobil v `@media(max-width:760px)` |
-| `assets/` | `poster.webp` (PC, fasáda), `poster-m.webp` (mobil) |
+| `assets/` | `poster.webp` (PC, fasáda), `poster-m.webp` (mobil), `og-image.jpg` (zdieľanie), `favicon.svg`, `apple-touch-icon.png` |
 | `models/garage.glb` | 3D garáž + auto (Draco). Pri zmene zvýš `?v=` v `scene.js`. |
 | `tools/` | Blender pipeline (nie je súčasť webu); `tools/garage.blend` sa generuje a nie je v gite |
 
@@ -40,6 +40,7 @@ Statická stránka – iba HTML/CSS/JS, **bez servera a bez build kroku**. Súbo
 - Scéna: `"/c/Program Files/Blender Foundation/Blender 5.3/blender.exe" -b --factory-startup --python tools/build_scene.py` → `models/garage.glb` + `tools/garage.blend` (~1 min).
 - Statický obrázok pre mobil a pozície bublín: `... --python tools/render_poster.py -- --tall-only` (~3 min). `-- --pts-only` = len pozície.
   `assets/poster.webp` (fasáda) **neprepisovať** – je z gitu.
+- Obrázok na zdieľanie a ikona pre iPhone: `... --python tools/render_og.py` → `assets/og-image.jpg` (1200×630), `assets/apple-touch-icon.png` (180×180). `-- --reuse-bg` = len texty, bez nového renderu garáže.
 - Zdrojový model auta `tools/src/skoda_octavia_mk4_rs.glb` je v `.gitignore` (CC BY 4.0, DR1KING100K – uvedené v pätičke a `tools/src/ATTRIBUTION.txt`).
 
 ## Objednávky / rezervačný systém (rozšírenie)
