@@ -80,7 +80,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   // logo na vrátach (canvas textúra)
   try { await Promise.all([document.fonts.load('800 120px "Barlow Condensed"'), document.fonts.load('600 40px "Barlow"')]); } catch (e) {}
   const logo = makeLogo();
-  door.add(logo);
+  // logo na vrátach vypnuté – nad vrátami je veľká svetelná tabuľa a HTML nadpis
+  void logo;
 
   // bubliny
   const bubbles = SERVICES.map((s) => {
