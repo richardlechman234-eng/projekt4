@@ -10,8 +10,8 @@ const lerp = (a, b, t) => a + (b - a) * t;
 // Kľúčové zábery kamery podľa postupu scrollu (0 → 1). Súradnice: x doprava, y hore, z k ulici.
 // Garáž: vnútro z ∈ [-3.9, 3.9], vráta v z ≈ 4.16, auto na otočnej plošine v strede, nos k vrátam (+z).
 const KEYS = [
-  { p: 0.00, pos: [0, 1.50, 15.5], tgt: [0, 1.60, 4.2], fov: 0 },
-  { p: 0.30, pos: [0, 1.45, 11.5], tgt: [0, 1.10, 2.5], fov: 0 },
+  { p: 0.00, pos: [0, 1.15, 14.0], tgt: [0, 2.75, 4.2], fov: 4 },
+  { p: 0.30, pos: [0, 1.35, 10.0], tgt: [0, 1.40, 2.5], fov: 0 },
   { p: 0.47, pos: [0, 1.40, 6.6], tgt: [0, 0.75, 1.0], fov: 0 },
   { p: 0.58, pos: [0, 1.40, 6.6], tgt: [0, 0.75, 1.0], fov: 0 },
   { p: 0.70, pos: [1.4, 1.55, 4.6], tgt: [0, 0.80, 0.3], fov: 6 },
@@ -56,13 +56,13 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   const sun = new THREE.DirectionalLight(0xdfe8ff, 0.7);
   sun.position.set(-5, 7, 14);
   scene.add(sun);
-  const facadeLamp = new THREE.SpotLight(0xffe6c8, 70, 20, 0.7, 0.8, 1.6);
-  facadeLamp.position.set(2.5, 5.0, 11.0);
-  facadeLamp.target.position.set(0, 1.6, 4.2);
+  const facadeLamp = new THREE.SpotLight(0xffe6c8, 160, 26, 0.95, 0.75, 1.5);
+  facadeLamp.position.set(0, 7.0, 13.5);
+  facadeLamp.target.position.set(0, 2.4, 4.2);
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=6");
+  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=7");
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {
@@ -70,7 +70,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
       o.castShadow = false;
       o.receiveShadow = true;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      mats.forEach((m) => { if (m && "envMapIntensity" in m) m.envMapIntensity = /CarPaint|Glass|Chrome|Rim/.test(m.name) ? 1.0 : 0.35; });
+      mats.forEach((m) => { if (m && "envMapIntensity" in m) m.envMapIntensity = /CarPaint|Glass|Chrome|Rim|Alloy/.test(m.name) ? 1.0 : 0.35; });
     }
   });
   const car = root.getObjectByName("Car");

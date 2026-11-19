@@ -43,28 +43,57 @@ def save_tex(name, rgb):
     return bpy.data.images.load(path)
 
 N = 1024
-# betónové panely (stena) – 1 dlaždica = 2.4 m × 1.2 m panel
-c = fbm(N); spots = fbm(N, (16, 32, 64), (1, .6, .4))
-base = 0.70 + (c - 0.5) * 0.10 - (spots > 0.78) * 0.05
 yy, xx = np.mgrid[0:N, 0:N]
-seam = ((xx % N) < 3) | ((yy % (N // 2)) < 3)
-base = np.where(seam, base * 0.72, base)
-for cx, cy in ((60, 60), (N - 60, 60), (60, N // 2 - 60), (N - 60, N // 2 - 60), (60, N // 2 + 60), (N - 60, N // 2 + 60), (60, N - 60), (N - 60, N - 60)):
-    base[(xx - cx) ** 2 + (yy - cy) ** 2 < 49] *= 0.6          # kotevné otvory
-TEX_WALL = save_tex("concrete_panel", np.stack([base * 0.99, base, base * 1.02], axis=2))
+def normal_from_height(h, strength):
+    dx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) * strength
+    dy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) * strength
+    n = np.stack([-dx, dy, np.ones_like(h)], axis=2)
+    n /= np.linalg.norm(n, axis=2, keepdims=True)
+    return n * 0.5 + 0.5
+def save_normal(name, h, strength):
+    img = save_tex(name, normal_from_height(h, strength))
+    img.colorspace_settings.name = "Non-Color"
+    return img
+
+# biele tehly – dlaždica 1 m × 1 m: 16 radov po 6.25 cm, tehla 25 cm, väzba na polovicu
+RH, BW, MO = 64, 256, 6
+row = yy // RH
+off = (row % 2) * (BW // 2)
+bx = (xx + off) % BW; by = yy % RH
+edge = np.minimum.reduce([bx - MO, BW - bx, by - MO, RH - by]).astype(float)
+mortar = edge <= 0
+bid = (row * 7 + (xx + off) // BW) % 4096
+tint = rng.random(4096)[bid]
+noise = fbm(N, (16, 32, 64, 128), (1, .7, .5, .3))
+chips = rng.random((N, N)) > 0.996
+col = 0.84 + tint * 0.08 + (noise - 0.5) * 0.07 - chips * 0.10
+col = np.where(mortar, 0.66 + (noise - 0.5) * 0.05, col)
+TEX_WALL = save_tex("white_brick", np.stack([col, col * 0.995, col * 0.985], axis=2))
+hgt = np.clip(edge / 5.0, 0, 1) + (noise - 0.5) * 0.25 + tint[..., None][..., 0] * 0.1
+TEX_WALL_N = save_normal("white_brick_n", hgt, 2.2)
+
 # epoxidová podlaha s vločkami
 f = fbm(N, (8, 16, 32), (1, .6, .4)) * 0.035 + 0.055
 fl = rng.random((N, N))
 f = np.where(fl > 0.985, f + 0.12, f)
 f = np.where(fl < 0.008, f + 0.05, f)
 TEX_FLOOR = save_tex("epoxy_floor", np.stack([f, f * 1.02, f * 1.06], axis=2))
-# fasáda – vodorovný plechový obklad
-v = ((yy % 64) < 4) * -0.05 + ((yy % 64) > 58) * 0.03
-fac = 0.19 + v + (fbm(N, (4, 8, 16), (1, .6, .3)) - 0.5) * 0.02
-TEX_FACADE = save_tex("facade_cladding", np.stack([fac, fac * 1.01, fac * 1.05], axis=2))
+
+# dezén pneumatiky (u = obvod, v = šírka behúňa)
+TN = 512
+ty, tx = np.mgrid[0:TN, 0:TN]
+vc = np.abs(ty - TN / 2)
+lat = ((tx + vc * 0.9) % 64) < 9
+lat &= (vc > 34) & (vc < 236)
+circ = (np.abs(vc - 34) < 6) | (np.abs(vc - 120) < 5)
+sip = ((tx + vc * 0.9) % 32 < 2) & (vc > 40) & (vc < 115)
+th = 1.0 - lat * 1.0 - circ * 1.0 - sip * 0.5
+tc = 0.045 + (th - 1) * 0.03 + (fbm(TN, (8, 16, 32), (1, .6, .4)) - 0.5) * 0.01
+TEX_TREAD = save_tex("tyre_tread", np.stack([tc, tc, tc * 1.05], axis=2))
+TEX_TREAD_N = save_normal("tyre_tread_n", th, 1.6)
 
 # ================================================================== materiály
-def mat(name, color, metallic=0.0, rough=0.5, emit=None, emit_strength=0.0, coat=0.0, tex=None):
+def mat(name, color, metallic=0.0, rough=0.5, emit=None, emit_strength=0.0, coat=0.0, tex=None, normal=None):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -75,6 +104,11 @@ def mat(name, color, metallic=0.0, rough=0.5, emit=None, emit_strength=0.0, coat
     if tex is not None:
         t = nt.nodes.new("ShaderNodeTexImage"); t.image = tex
         nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
+    if normal is not None:
+        tn = nt.nodes.new("ShaderNodeTexImage"); tn.image = normal
+        nm = nt.nodes.new("ShaderNodeNormalMap")
+        nt.links.new(tn.outputs["Color"], nm.inputs["Color"])
+        nt.links.new(nm.outputs["Normal"], b.inputs["Normal"])
     if coat:
         for k in ("Coat Weight", "Clearcoat"):
             if k in b.inputs: b.inputs[k].default_value = coat
@@ -87,9 +121,8 @@ def mat(name, color, metallic=0.0, rough=0.5, emit=None, emit_strength=0.0, coat
     return m
 
 M = {
-    "wall": mat("Wall", (1, 1, 1), 0.0, 0.85, tex=TEX_WALL),
+    "wall": mat("WhiteBrick", (1, 1, 1), 0.0, 0.8, tex=TEX_WALL, normal=TEX_WALL_N),
     "floor": mat("Floor", (1, 1, 1), 0.15, 0.32, tex=TEX_FLOOR),
-    "facade": mat("Facade", (1, 1, 1), 0.5, 0.45, tex=TEX_FACADE),
     "ceil": mat("Ceiling", (0.30, 0.31, 0.32), 0.0, 0.9),
     "lining": mat("WallLining", (0.20, 0.21, 0.22), 0.7, 0.42),
     "beam": mat("SteelBeam", (0.11, 0.115, 0.12), 0.8, 0.45),
@@ -106,7 +139,12 @@ M = {
     "dark": mat("DarkSteel", (0.05, 0.05, 0.055), 0.6, 0.5),
     "top": mat("Worktop", (0.12, 0.12, 0.13), 0.5, 0.45),
     "wood": mat("Wood", (0.42, 0.27, 0.15), 0.0, 0.6),
-    "tire": mat("Rubber", (0.018, 0.018, 0.02), 0.0, 0.85),
+    "tire": mat("Rubber", (0.016, 0.016, 0.018), 0.0, 0.72),
+    "tread": mat("TyreTread", (1, 1, 1), 0.0, 0.8, tex=TEX_TREAD, normal=TEX_TREAD_N),
+    "alloy": mat("Alloy", (0.62, 0.63, 0.66), 1.0, 0.22),
+    "alloyDark": mat("AlloyDark", (0.10, 0.10, 0.11), 0.9, 0.35),
+    "glassDark": mat("WindowGlass", (0.02, 0.025, 0.03), 0.6, 0.06),
+    "signGlow": mat("SignWhiteGlow", (1, 1, 1), 0.0, 0.3, emit=(1, 1, 1), emit_strength=2.2),
     "rim": mat("Rim", (0.42, 0.43, 0.46), 1.0, 0.28),
     "body": mat("CarPaint", (0.17, 0.18, 0.20), 0.85, 0.30, coat=1.0),
     "plate": mat("PlateBlank", (0.78, 0.78, 0.78), 0.0, 0.5),
@@ -209,22 +247,70 @@ def text3d(name, body, size, loc, material, parent=None, extrude=0.02, rot=(math
         mw = o.matrix_world.copy(); o.parent = parent; o.matrix_world = mw
     return o
 
-def tire(name, loc, parent, r=0.34, w=0.24, axis="Z", rim=True):
-    bm = bmesh.new()
-    prof = [(r * 0.66, -w / 2), (r * 0.88, -w / 2), (r * 0.985, -w * 0.38), (r, -w * 0.18), (r, w * 0.18),
-            (r * 0.985, w * 0.38), (r * 0.88, w / 2), (r * 0.66, w / 2), (r * 0.64, w * 0.3), (r * 0.64, -w * 0.3)]
-    segs = 32
-    rings = [[bm.verts.new((rr * math.cos(2 * math.pi * k / segs), rr * math.sin(2 * math.pi * k / segs), zz)) for k in range(segs)] for rr, zz in prof]
-    for i in range(len(rings)):
-        a, b = rings[i], rings[(i + 1) % len(rings)]
+from mathutils import Matrix
+_MESH = {}
+def tyre_mesh(r, w):
+    key = ("tyre", r, w)
+    if key in _MESH: return _MESH[key]
+    prof = [(0.62, -0.44), (0.66, -0.49), (0.72, -0.505), (0.76, -0.495), (0.78, -0.505), (0.86, -0.515), (0.93, -0.49), (0.968, -0.44), (0.99, -0.38), (1.0, -0.31),
+            (1.0, -0.1), (1.0, 0.1), (1.0, 0.31), (0.99, 0.38), (0.968, 0.44), (0.93, 0.49), (0.86, 0.515),
+            (0.78, 0.505), (0.76, 0.495), (0.72, 0.505), (0.66, 0.49), (0.62, 0.44), (0.60, 0.30), (0.60, -0.30)]
+    segs = 72
+    bm = bmesh.new(); uv = bm.loops.layers.uv.new()
+    rings = [[bm.verts.new((rf * r * math.cos(2 * math.pi * k / segs), rf * r * math.sin(2 * math.pi * k / segs), zf * w)) for k in range(segs + 1)] for rf, zf in prof]
+    np_ = len(prof)
+    for i in range(np_):
+        j = (i + 1) % np_
         for k in range(segs):
-            bm.faces.new((a[k], a[(k + 1) % segs], b[(k + 1) % segs], b[k]))
+            f = bm.faces.new((rings[i][k], rings[i][k + 1], rings[j][k + 1], rings[j][k]))
+            tread = 8 <= i <= 14
+            f.material_index = 1 if tread else 0
+            for l, (ii, kk) in zip(f.loops, ((i, k), (i, k + 1), (j, k + 1), (j, k))):
+                l[uv].uv = (kk / segs * 14, prof[ii][1] + 0.5)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6) if False else None
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    o = from_bm(name, bm, M["tire"], parent, smooth=True)
+    me = bpy.data.meshes.new("TyreMesh"); bm.to_mesh(me); bm.free()
+    for p in me.polygons: p.use_smooth = True
+    me.materials.append(M["tire"]); me.materials.append(M["tread"])
+    _MESH[key] = me
+    return me
+
+def rim_mesh(r, w):
+    key = ("rim", r, w)
+    if key in _MESH: return _MESH[key]
+    bm = bmesh.new()
+    def add(fn, mi):
+        before = set(bm.faces); fn(); 
+        for f in set(bm.faces) - before: f.material_index = mi
+    R = r * 0.62
+    add(lambda: bmesh.ops.create_cone(bm, cap_ends=True, segments=48, radius1=R * 0.97, radius2=R * 0.97, depth=w * 0.7), 1)          # barrel
+    add(lambda: bmesh.ops.create_cone(bm, cap_ends=False, segments=48, radius1=R * 1.03, radius2=R * 0.99, depth=0.035,
+                                      matrix=Matrix.Translation((0, 0, w * 0.36))), 0)                                                  # lip
+    add(lambda: bmesh.ops.create_cone(bm, cap_ends=True, segments=24, radius1=R * 0.22, radius2=R * 0.18, depth=0.05,
+                                      matrix=Matrix.Translation((0, 0, w * 0.34))), 0)                                                  # hub
+    add(lambda: bmesh.ops.create_cone(bm, cap_ends=True, segments=48, radius1=R * 0.95, radius2=R * 0.95, depth=0.01,
+                                      matrix=Matrix.Translation((0, 0, w * 0.18))), 1)                                                  # tmavé pozadie disku
+    for i in range(5):                                                                                                                   # 5 širokých ramien (Y-profil)
+        for d in (-0.16, 0.16):
+            a = 2 * math.pi * i / 5 + d
+            m = Matrix.Translation((math.cos(a) * R * 0.56, math.sin(a) * R * 0.56, w * 0.3)) @ Matrix.Rotation(a, 4, "Z") @ Matrix.Rotation(0.18, 4, "Y")                 @ Matrix.Diagonal((R * 0.78, R * 0.13, 0.04, 1))
+            add(lambda m=m: bmesh.ops.create_cube(bm, size=1.0, matrix=m), 0)
+    for i in range(5):                                                                                                                   # matice
+        a = 2 * math.pi * (i + 0.5) / 5
+        add(lambda a=a: bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.011, radius2=0.011, depth=0.02,
+                                               matrix=Matrix.Translation((math.cos(a) * R * 0.13, math.sin(a) * R * 0.13, w * 0.37))), 1)
+    me = bpy.data.meshes.new("RimMesh"); bm.to_mesh(me); bm.free()
+    me.materials.append(M["alloy"]); me.materials.append(M["alloyDark"])
+    _MESH[key] = me
+    return me
+
+def tire(name, loc, parent, r=0.34, w=0.24, axis="Z", rim=True, flip=False):
+    o = bpy.data.objects.new(name, tyre_mesh(r, w)); link(o, parent)
     o.location = loc
-    if axis == "X": o.rotation_euler = (0, math.pi / 2, 0)
+    if axis == "X": o.rotation_euler = (0, math.pi / 2 * (-1 if flip else 1), 0)
+    elif axis == "Y": o.rotation_euler = (math.pi / 2, 0, 0)
     if rim:
-        cyl(name + "_rim", r * 0.66, w * 0.7, (0, 0, 0), M["rim"], o, verts=24)
+        ro = bpy.data.objects.new(name + "_rim", rim_mesh(r, w)); link(ro, o)
     return o
 
 # ================================================================== GARÁŽ
@@ -232,13 +318,13 @@ GW, GD, GH = 7.6, 7.8, 3.2        # vnútro: šírka (x), hĺbka (y), výška (z
 T = 0.3                           # hrúbka steny
 OW, OH = 4.8, 2.8                 # otvor vrát
 FY = -GD / 2                      # vnútorná strana prednej steny
-WALL_UV = (2.4, 2.4)
+WALL_UV = (1.0, 1.0)
 G = empty("Garage")
 
 # podlaha, okolie
 box("Floor", (GW, GD, 0.1), (0, 0, -0.05), M["floor"], G, uv=(2.0, 2.0))
 box("Ground", (70, 46, 0.1), (0, -26 - GD / 2, -0.07), M["asphalt"], G)
-box("Apron", (GW + 6, 6, 0.06), (0, FY - T - 3.0, -0.03), M["concrete"], G)
+box("Apron", (17.0, 6.2, 0.06), (0, FY - T - 3.1, -0.03), M["concrete"], G)
 # bezpečnostné čiary pri stenách
 for nm, s, l in (("LineL", (0.06, GD - 0.8, 0.004), (-GW / 2 + 0.75, 0, 0.002)),
                  ("LineR", (0.06, GD - 0.8, 0.004), (GW / 2 - 0.75, 0, 0.002)),
@@ -313,24 +399,53 @@ for i in range(n_pan):
 box("DoorStripe", (OW, 0.064, 0.05), (0, -0.002, -OH * 0.5), M["orange"], door)
 box("DoorBacking", (OW, 0.01, OH), (0, 0.035, -OH / 2), M["dark"], door)
 
-# ---- fasáda (obklad, rám, nápis, svetlá)
+# ---- fasáda: veľká tehlová budova, podsvietený nápis, okná, svetlá
 FF = FY - T                     # vonkajšia plocha prednej steny
+FW, FH = 17.0, 5.8              # šírka a výška fasády (budova pôsobí väčšia než samotná garáž)
 fs = empty("Facade", (0, 0, 0), G)
-box("FacadeL", (sideW, 0.04, H), (-(OW / 2 + sideW / 2), FF - 0.02, H / 2 - 0.05), M["facade"], fs, uv=(2.0, 2.0))
-box("FacadeR", (sideW, 0.04, H), ((OW / 2 + sideW / 2), FF - 0.02, H / 2 - 0.05), M["facade"], fs, uv=(2.0, 2.0))
-box("FacadeTop", (OW, 0.04, H - OH), (0, FF - 0.02, OH + (H - OH) / 2 - 0.05), M["facade"], fs, uv=(2.0, 2.0))
-box("SideSkinL", (0.04, GD + 2 * T, H), (-GW / 2 - T - 0.02, 0, H / 2 - 0.05), M["facade"], fs, uv=(2.0, 2.0))
-box("SideSkinR", (0.04, GD + 2 * T, H), (GW / 2 + T + 0.02, 0, H / 2 - 0.05), M["facade"], fs, uv=(2.0, 2.0))
-box("Parapet", (GW + 2 * T + 0.12, GD + 2 * T + 0.12, 0.25), (0, 0, H + 0.08), M["beam"], fs)
-for nm, s, l in (("FrameL", (0.12, 0.08, OH + 0.12), (-OW / 2 - 0.06, FF - 0.05, (OH + 0.12) / 2)),
-                 ("FrameR", (0.12, 0.08, OH + 0.12), (OW / 2 + 0.06, FF - 0.05, (OH + 0.12) / 2)),
-                 ("FrameT", (OW + 0.24, 0.08, 0.12), (0, FF - 0.05, OH + 0.06))):
-    box(nm, s, l, M["orange"], fs)
-box("FacadeSignP", (0.34, 0.06, 0.34), (-1.25, FF - 0.07, OH + 0.4), M["orange"], fs)
-text3d("FacadeSignPChar", "P", 0.30, (-1.25, FF - 0.105, OH + 0.29), M["beam"], fs, extrude=0.01)
-text3d("FacadeSignText", "PLS GROUP", 0.30, (-1.0, FF - 0.08, OH + 0.29), M["white"], fs, extrude=0.02, align="LEFT")
+sw = FW / 2 - OW / 2
+box("FacadeL", (sw, 0.08, FH), (-(OW / 2 + sw / 2), FF - 0.04, FH / 2 - 0.05), M["wall"], fs, uv=(1.0, 1.0))
+box("FacadeR", (sw, 0.08, FH), ((OW / 2 + sw / 2), FF - 0.04, FH / 2 - 0.05), M["wall"], fs, uv=(1.0, 1.0))
+box("FacadeTop", (OW, 0.08, FH - OH), (0, FF - 0.04, OH + (FH - OH) / 2 - 0.05), M["wall"], fs, uv=(1.0, 1.0))
+box("Plinth", (FW, 0.12, 0.45), (0, FF - 0.1, 0.2), M["beam"], fs)
+box("Cornice", (FW + 0.3, 0.4, 0.3), (0, FF - 0.12, FH - 0.05), M["beam"], fs)
 for sx in (-1, 1):
-    box(f"FacadeLamp{sx}", (0.5, 0.12, 0.06), (sx * (OW / 2 + 0.8), FF - 0.08, OH + 0.25), M["lamp"], fs)
+    box(f"Pilaster{sx}", (0.35, 0.18, FH), (sx * (FW / 2 - 0.17), FF - 0.12, FH / 2 - 0.05), M["beam"], fs)
+# rám vrát
+for nm, s_, l in (("FrameL", (0.16, 0.12, OH + 0.16), (-OW / 2 - 0.08, FF - 0.1, (OH + 0.16) / 2)),
+                  ("FrameR", (0.16, 0.12, OH + 0.16), (OW / 2 + 0.08, FF - 0.1, (OH + 0.16) / 2)),
+                  ("FrameT", (OW + 0.32, 0.12, 0.16), (0, FF - 0.1, OH + 0.08))):
+    box(nm, s_, l, M["orange"], fs)
+# veľká svetelná tabuľa nad vrátami
+SZ = OH + 1.05
+box("Fascia", (9.6, 0.16, 1.35), (0, FF - 0.14, SZ), M["beam"], fs, bevel=0.02)
+box("FasciaGlow", (9.7, 0.05, 0.05), (0, FF - 0.2, SZ - 0.7), M["orangeGlow"], fs)
+box("FacadeSignP", (1.0, 0.1, 1.0), (-4.05, FF - 0.25, SZ), M["orange"], fs, bevel=0.01)
+text3d("FacadeSignPChar", "P", 0.95, (-4.05, FF - 0.31, SZ - 0.34), M["beam"], fs, extrude=0.02)
+text3d("FacadeSignText", "PLS GROUP", 0.92, (-3.35, FF - 0.24, SZ - 0.18), M["signGlow"], fs, extrude=0.04, align="LEFT")
+text3d("FacadeSignSub", "AUTOSERVIS  ·  BRATISLAVA", 0.24, (-3.33, FF - 0.24, SZ - 0.52), M["orangeGlow"], fs, extrude=0.015, align="LEFT")
+# okná kancelárie a vchod
+for sx in (-1, 1):
+    x = sx * 5.6
+    box(f"Win{sx}", (2.2, 0.06, 1.5), (x, FF - 0.06, 1.75), M["glassDark"], fs)
+    box(f"WinFrameT{sx}", (2.36, 0.12, 0.08), (x, FF - 0.1, 2.54), M["beam"], fs)
+    box(f"WinFrameB{sx}", (2.36, 0.18, 0.08), (x, FF - 0.12, 0.96), M["beam"], fs)
+    box(f"WinFrameL{sx}", (0.08, 0.12, 1.6), (x - 1.14, FF - 0.1, 1.75), M["beam"], fs)
+    box(f"WinFrameR{sx}", (0.08, 0.12, 1.6), (x + 1.14, FF - 0.1, 1.75), M["beam"], fs)
+    box(f"WinMull{sx}", (0.05, 0.1, 1.5), (x, FF - 0.09, 1.75), M["beam"], fs)
+box("EntryDoor", (1.05, 0.08, 2.25), (3.55, FF - 0.06, 1.125), M["glassDark"], fs)
+box("EntryFrame", (1.2, 0.12, 2.35), (3.55, FF - 0.03, 1.175), M["beam"], fs)
+box("EntryHandle", (0.04, 0.06, 0.7), (3.2, FF - 0.13, 1.1), M["orange"], fs)
+box("EntryCanopy", (1.6, 0.9, 0.08), (3.55, FF - 0.45, 2.55), M["beam"], fs)
+for i, x in enumerate((-(OW / 2 + 1.3), (OW / 2 + 1.3) - 0.0, -7.2, 7.2)):
+    box(f"FacadeLamp{i}", (0.42, 0.16, 0.08), (x, FF - 0.12, OH + 0.1 if abs(x) < 6 else 3.2), M["lamp"], fs)
+# predpolie: obrubník, stĺpiky, vodorovné čiary
+box("Curb", (FW, 0.25, 0.12), (0, FF - 6.2, 0.03), M["concrete"], fs)
+for sx in (-1, 1):
+    cyl(f"Bollard{sx}", 0.09, 0.9, (sx * (OW / 2 + 0.55), FF - 0.55, 0.45), M["beam"], fs, verts=20)
+    cyl(f"BollardTop{sx}", 0.095, 0.1, (sx * (OW / 2 + 0.55), FF - 0.55, 0.85), M["orange"], fs, verts=20)
+for i in range(6):
+    box(f"Park{i}", (0.1, 4.2, 0.005), (-8.5 + i * 2.6 if i < 3 else 3.3 + (i - 3) * 2.6, FF - 9.5, 0.002), M["white"], fs)
 
 # ---- zadná stena: červené skrine so šuflíkmi
 def drawer_unit(name, x0, x1, h, n, y_back=GD / 2 - 0.05, depth=0.65, top=True):
@@ -367,12 +482,14 @@ for y in (-3.3, -1.2, 1.2, 3.0):
 for z in (0.05, 1.08, 2.15):
     for dx in (-0.22, 0.22):
         box("RackBeam", (0.05, 6.35, 0.05), (rx + dx, -0.15, z), M["shelf"], rg)
-for lv, z in enumerate((0.45, 1.48)):
-    for i in range(12):
-        y = -3.05 + 0.52 * i
-        if lv == 1 and i % 4 == 3:
-            continue
-        tire(f"RackTyre{lv}_{i}", (rx, y, z), rg, 0.34, 0.22, "X", rim=(i % 3 == 0))
+for lv, z in enumerate((0.40, 1.43)):
+    y = -3.15
+    i = 0
+    while y < 3.2:
+        if not (lv == 1 and 8 <= i <= 10):
+            tire(f"RackTyre{lv}_{i}", (rx, y, z), rg, 0.33, 0.235, "Y", rim=(lv == 0 and i % 6 < 2))
+        y += 0.245 + (0.06 if i % 4 == 3 else 0.0)
+        i += 1
 
 # ---- pravá stena: police s olejmi, kompresor, hasiaci prístroj, stohy pneumatík
 sh = empty("RightShelf", (0, 0, 0), G)
