@@ -21,10 +21,10 @@ const KEYS = [
 // na výšku (mobil): kamera ostáva vnútri garáže, auto vidno šikmo zhora
 const KEYS_PORTRAIT = [
   KEYS[0], KEYS[1],
-  { p: 0.47, pos: [1.9, 2.25, 3.75], tgt: [0, 0.45, 0.35], fov: 0 },
-  { p: 0.58, pos: [1.9, 2.25, 3.75], tgt: [0, 0.45, 0.35], fov: 0 },
-  { p: 0.70, pos: [2.9, 2.0, 2.7], tgt: [0, 0.5, 0], fov: 0 },
-  { p: 1.00, pos: [3.3, 2.05, 2.3], tgt: [-0.3, 0.5, -0.5], fov: 0 },
+  { p: 0.47, pos: [2.3, 2.7, 3.6], tgt: [0.1, 0.35, 0.1], fov: 0 },
+  { p: 0.58, pos: [2.3, 2.7, 3.6], tgt: [0.1, 0.35, 0.1], fov: 0 },
+  { p: 0.70, pos: [3.3, 2.5, 3.2], tgt: [0, 0.4, 0], fov: 0 },
+  { p: 1.00, pos: [3.4, 2.5, 2.5], tgt: [-0.2, 0.4, -0.4], fov: 0 },
 ];
 const YAW_END = -1.95;      // ~ -112° → bok + zadná tretina (výfuk) ku kamere
 const toThree = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // Blender → three
@@ -128,7 +128,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     W = canvas.clientWidth; H = canvas.clientHeight;
     renderer.setSize(W, H, false);
     camera.aspect = W / H;
-    baseFov = camera.aspect < 0.9 ? 58 : camera.aspect < 1.3 ? 50 : 42;
+    baseFov = camera.aspect < 0.65 ? 74 : camera.aspect < 0.9 ? 64 : camera.aspect < 1.3 ? 50 : 42;
   }
 
   let last = performance.now(), slow = 0, dpr = Math.min(window.devicePixelRatio || 1, 1.5), lastYaw = null;
