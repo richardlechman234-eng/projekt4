@@ -8,16 +8,16 @@ const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t *
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // Kľúčové zábery kamery podľa postupu scrollu (0 → 1). Súradnice: x doprava, y hore, z k ulici.
-// Garáž: vnútro z ∈ [-3.1, 3.1], vráta v z ≈ 3.34, auto v strede, nos smerom k vrátam (+z).
+// Garáž: vnútro z ∈ [-3.9, 3.9], vráta v z ≈ 4.16, auto na otočnej plošine v strede, nos k vrátam (+z).
 const KEYS = [
-  { p: 0.00, pos: [0, 1.25, 12.8], tgt: [0, 1.35, 3.3], fov: 0 },
-  { p: 0.30, pos: [0, 1.30, 9.2], tgt: [0, 1.0, 2.0], fov: 0 },
-  { p: 0.47, pos: [0, 1.30, 5.0], tgt: [0, 0.80, 1.0], fov: 0 },
-  { p: 0.58, pos: [0, 1.30, 5.0], tgt: [0, 0.80, 1.0], fov: 0 },
-  { p: 0.70, pos: [-0.8, 1.35, 3.65], tgt: [0, 0.80, 0.4], fov: 6 },
-  { p: 1.00, pos: [-2.15, 1.45, 2.95], tgt: [0.35, 0.60, -0.3], fov: 20 },
+  { p: 0.00, pos: [0, 1.50, 15.5], tgt: [0, 1.60, 4.2], fov: 0 },
+  { p: 0.30, pos: [0, 1.45, 11.5], tgt: [0, 1.10, 2.5], fov: 0 },
+  { p: 0.47, pos: [0, 1.40, 6.6], tgt: [0, 0.75, 1.0], fov: 0 },
+  { p: 0.58, pos: [0, 1.40, 6.6], tgt: [0, 0.75, 1.0], fov: 0 },
+  { p: 0.70, pos: [-1.4, 1.55, 4.6], tgt: [0, 0.80, 0.3], fov: 6 },
+  { p: 1.00, pos: [-3.0, 1.70, 3.55], tgt: [0.5, 0.60, -0.4], fov: 14 },
 ];
-const YAW_END = -1.31;      // ~ -75° → auto otočené bokom (pravý bok ku kamere)
+const YAW_END = -1.95;      // ~ -112° → bok + zadná tretina (výfuk) ku kamere
 const toThree = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // Blender → three
 
 export async function createScene({ canvas, bubblesEl, onBubble, onProgress, reduced }) {
@@ -32,7 +32,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x10141a);
-  scene.fog = new THREE.Fog(0x10141a, 16, 42);
+  scene.fog = new THREE.Fog(0x10141a, 18, 48);
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
 
   // prostredie pre odlesky laku
@@ -41,14 +41,13 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
   // svetlá: interiér (LED panely) + vonkajšie osvetlenie fasády
   scene.add(new THREE.HemisphereLight(0xbfd0e8, 0x20232a, 0.35));
-  const ledZ = [1.8, 0, -1.8];
-  ledZ.forEach((z) => {
-    const l = new THREE.PointLight(0xfff1de, 7, 9, 2);
-    l.position.set(0, 2.55, z);
+  [[-1.6, 1.3], [1.6, 1.3], [-1.6, -1.3], [1.6, -1.3]].forEach(([x, z]) => {
+    const l = new THREE.PointLight(0xfff1de, 6, 10, 2);
+    l.position.set(x, 3.0, z);
     scene.add(l);
   });
   const spot = new THREE.SpotLight(0xfff4e6, 55, 12, 0.85, 0.6, 1.6);
-  spot.position.set(0.4, 2.7, 0.6);
+  spot.position.set(0.4, 3.1, 0.6);
   spot.target.position.set(0, 0, 0);
   spot.castShadow = true;
   spot.shadow.mapSize.set(1024, 1024);
@@ -58,12 +57,12 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   sun.position.set(-5, 7, 14);
   scene.add(sun);
   const facadeLamp = new THREE.SpotLight(0xffe6c8, 70, 20, 0.7, 0.8, 1.6);
-  facadeLamp.position.set(2.5, 4.4, 9.5);
-  facadeLamp.target.position.set(0, 1.4, 3.4);
+  facadeLamp.position.set(2.5, 5.0, 11.0);
+  facadeLamp.target.position.set(0, 1.6, 4.2);
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=3");
+  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=4");
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {
@@ -92,7 +91,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     el.innerHTML = `<span class="dot">${s.icon}</span><span class="lab">${s.title}</span>`;
     el.addEventListener("click", () => onBubble(s.id));
     bubblesEl.appendChild(el);
-    return { s, el, a: toThree(s.anchor), n: toThree(s.normal).normalize(), v: 0 };
+    const an = car.getObjectByName("AN_" + s.id);
+    return { s, el, a: an ? an.position.clone() : new THREE.Vector3(), n: toThree(s.normal).normalize(), v: 0 };
   });
 
   // --- stav ---
@@ -212,8 +212,8 @@ function makeLogo() {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 1.45), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false }));
-  m.position.set(0, -1.1, 0.045);   // Door pivot je hore, panely idú dole; +z je predná strana vrát
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.9, 1.95), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false }));
+  m.position.set(0, -1.35, 0.045);   // Door pivot je hore, panely idú dole; +z je predná strana vrát
   m.name = "DoorLogo";
   return m;
 }
