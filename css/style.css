@@ -156,10 +156,7 @@ section.sec{padding:96px 0}
 /* ---------- o nás ---------- */
 .about{background:var(--k);color:var(--w)}
 .about .eyebrow:before{background:var(--o)}
-.agrid{display:grid;grid-template-columns:1fr 1.1fr;gap:60px;align-items:center}
-.aimg{position:relative;border-radius:16px;overflow:hidden;border:2px solid rgba(255,255,255,.2)}
-.aimg img{width:100%;aspect-ratio:4/3;object-fit:cover;filter:saturate(.85)}
-.atag{position:absolute;left:16px;bottom:16px;background:var(--o);color:var(--k);padding:8px 14px;border-radius:8px;font-family:var(--head);font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.agrid{display:grid;grid-template-columns:1fr;max-width:880px}
 .about h2{margin-bottom:18px}
 .alead{font-size:21px;margin-bottom:14px}
 .about p{opacity:.92}
