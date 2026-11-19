@@ -218,7 +218,7 @@ export function initUi() {
     if (!t) return;
     if (t.hasAttribute("data-close")) t.closest("dialog")?.close();
     else if (t.hasAttribute("data-book")) { e.preventDefault(); openBooking(t.dataset.book || "servis"); }
-    else if (t.hasAttribute("data-open")) { e.preventDefault(); (t.closest(".scene") && window.__openSvc ? window.__openSvc : openService)(t.dataset.open); }
+    else if (t.hasAttribute("data-open")) { e.preventDefault(); (window.__openSvc || openService)(t.dataset.open); }
   });
   // klik na pozadie (mimo okna) zavrie dialóg
   [svcDlg, bkDlg].forEach((dlg) => dlg.addEventListener("mousedown", (e) => { if (e.target === dlg) dlg.close(); }));

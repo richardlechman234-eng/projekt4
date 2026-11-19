@@ -51,7 +51,7 @@ function showStatic() {
     el.className = "bubble static-b" + (sv.big ? " big" : "");
     el.setAttribute("aria-label", sv.title + " – zobraziť detail");
     el.innerHTML = `<span class="dot">${sv.icon}</span><span class="lab"><span class="lf">${sv.title}</span><span class="ls">${sv.mob || sv.title}</span></span>`;
-    el.addEventListener("click", () => openService(sv.id));
+    el.addEventListener("click", () => showService(sv.id));
     const hl = (id) => { staticEls.forEach((b) => b.el.classList.toggle("hot", b.id === id)); document.dispatchEvent(new CustomEvent("svc-highlight", { detail: id })); };
     el.addEventListener("pointerenter", () => hl(sv.id));
     el.addEventListener("pointerleave", () => hl(null));
@@ -77,20 +77,45 @@ function webgl() {
 }
 
 /* ---------- 3D scéna ---------- */
-let started = false;
-let showService = (id) => openService(id);
-window.__openSvc = (id) => showService(id);
-async function start3d() {
-  if (started) return;
+let started = false, api3d = null, ready3d = null;
+const svcDlg = document.getElementById("svc-dlg");
+const waitTop = () => new Promise((res) => {
+  if (scrollY < 5) return res();
+  scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+  const t0 = performance.now();
+  (function check() { if (scrollY < 5 || performance.now() - t0 > 1200) res(); else requestAnimationFrame(check); })();
+});
+// detail služby (bublina, obdĺžnik aj karta v sekcii Služby): vyjsť ku garáži, priblížiť auto na miesto služby,
+// text vpravo (mobil dole), auto vľavo – pol na pol. Bez 3D (zlyhanie WebGL) klasické okno.
+let busySvc = false;
+async function showService(id) {
+  if (busySvc) return;
+  busySvc = true;
+  try {
+    if (!canWebgl) return openService(id);
+    if (svcDlg.open) { svcDlg.close(); await new Promise((r) => setTimeout(r, 720)); }   // najprv návrat kamery
+    await waitTop();
+    const api = api3d || (await start3d());
+    if (!api) return openService(id);
+    await api.focus(id);
+    openService(id, { side: true });
+  } finally { busySvc = false; }
+}
+window.__openSvc = showService;
+function start3d() {
+  if (!ready3d) ready3d = load3d();
+  return ready3d;
+}
+async function load3d() {
   started = true;
   loader.classList.remove("done");
   go3d && (go3d.disabled = true);
   try {
     const { createScene } = await import("./scene.js");
     const api = await createScene({ canvas: document.getElementById("gl"), bubblesEl, onBubble: (id) => showService(id), reduced });
-    // klik na bublinu / obdĺžnik: priblížiť na miesto služby, potom detail; po zavretí späť
-    showService = (id) => api.focus(id).then(() => openService(id, { side: true }));
-    document.getElementById("svc-dlg").addEventListener("close", () => { if (!document.getElementById("svc-dlg").open) api.unfocus(); });
+    api3d = api;
+    // po zavretí detailu sa kamera vráti späť
+    svcDlg.addEventListener("close", () => { if (!svcDlg.open) api.unfocus(); });
     // ťuk/klik do scény pri otvorenom bočnom paneli → zavrieť a vrátiť sa k autu
     document.getElementById("gl").addEventListener("pointerdown", () => { const d = document.getElementById("svc-dlg"); if (d.open && d.classList.contains("side")) d.close(); });
     hideStatic();
@@ -105,6 +130,7 @@ async function start3d() {
     });
     document.addEventListener("car-rotated", () => hint.classList.add("faded"), { once: true });
     new IntersectionObserver(([e]) => (e.isIntersecting ? api.resume() : api.pause())).observe(wrap);
+    return api;
   } catch (err) {
     console.error(err);
     loader.classList.add("done");     // 3D zlyhalo → statický obrázok s bublinami
@@ -112,6 +138,7 @@ async function start3d() {
     poster.classList.remove("off");
     if (!staticEls.length) showStatic();
     hud(true);
+    return null;
   }
 }
 
@@ -121,7 +148,8 @@ function hud(on) {
 }
 
 hint.textContent = touch ? "Ťuknite na bublinu a uvidíte, čo robíme" : "Kliknite na bublinu a uvidíte, čo robíme";
-if (!webgl()) {
+const canWebgl = webgl();
+if (!canWebgl) {
   document.documentElement.classList.add("nowebgl");
   showStatic(); hud(true); loader.classList.add("done");
   go3d && (go3d.hidden = true);

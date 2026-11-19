@@ -240,9 +240,9 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
       if (p >= 1) { const d = zoom.done; if (zoom.dir < 0) zoomTo = null; zoom = null; d && d(); }
     }
     if (zoomTo && zk > 0) {
-      // priblížená časť auta sa posunie mimo panelu s textom (PC: panel vpravo → doľava, mobil: panel dole → hore)
-      if (camera.aspect >= 1) camera.setViewOffset(W, H, W * 0.2 * zk, 0, W, H);
-      else camera.setViewOffset(W, H, 0, H * 0.2 * zk, W, H);
+      // priblížená časť auta je v jednej polovici, text v druhej (PC: auto vľavo / text vpravo, mobil: auto hore / text dole)
+      if (camera.aspect >= 1) camera.setViewOffset(W, H, W * 0.25 * zk, 0, W, H);   // stred ľavej polovice
+      else camera.setViewOffset(W, H, 0, H * 0.25 * zk, W, H);                     // stred hornej polovice
       camera.position.lerpVectors(P, zoomTo.pos, zk);
       camera.lookAt(T.clone().lerp(zoomTo.tgt, zk));
       camera.fov = lerp(camera.fov, zoomTo.fov, zk);
@@ -325,7 +325,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
     highlight,
     // klik na bublinu: kamera sa priblíži na miesto služby (koleso, sklo…), potom sa otvorí detail
     focus: (id) => new Promise((res) => {
-      if (intro || reduced) return res();
+      if (intro) { intro.t0 = -1e9; frame(); }          // úvodnú jazdu preskočiť, kamera hneď na hlavnom pohľade
+      if (reduced) return res();
       const to = focusPose(id);
       if (!to) return res();
       vel = 0; zoomTo = to;
