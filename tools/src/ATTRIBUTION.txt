@@ -5,9 +5,3 @@ Source:  https://sketchfab.com/3d-models/skoda-octavia-mk4-rs-146db6aa7d7541b49c
 License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 Changes: materials replaced (red metallic paint, glass, lights), Škoda/vRS badges removed,
          decimated for web, rescaled and merged into models/garage.glb (tools/build_scene.py).
-
-bmw_m4_f82_razor.glb   (predchádzajúce auto, už sa nepoužíva)
-Title:   BMW M4 F82 Razor 2014 | www.vecarz.com
-Author:  vecarz (@heynic)
-Source:  https://sketchfab.com/3d-models/bmw-m4-f82-razor-2014-wwwvecarzcom-25d00f20b8cf4828bd934acb31e0aae4
-License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)

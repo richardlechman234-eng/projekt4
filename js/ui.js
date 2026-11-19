@@ -18,7 +18,6 @@ export function openService(id, { side = false } = {}) {
   svcDlg.innerHTML = `
     <div class="sheet" role="document">
       <button class="x" type="button" data-close aria-label="Zavrieť">×</button>
-      ${side ? "" : `<div class="ph">${s.photo ? `<img src="${s.photo}" alt="" loading="lazy">` : ""}${s.icon}</div>`}
       <div class="body">
         <p class="eyebrow">${String(idx).padStart(2, "0")} · Služba</p>
         <h3 id="svc-title">${esc(s.title)}</h3>

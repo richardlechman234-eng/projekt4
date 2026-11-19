@@ -1,3 +1,5 @@
 tools/garage.blend1
 tools/prev_*.png
 tools/src/skoda_octavia_mk4_rs.glb
+# Blender zdroj scény – generuje ho tools/build_scene.py, na web nepatrí (14 MB)
+tools/garage.blend

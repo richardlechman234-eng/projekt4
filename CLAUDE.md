@@ -22,7 +22,7 @@ Statická stránka – iba HTML/CSS/JS, **bez servera a bez build kroku**. Súbo
 | `index.html` | Hlavná stránka: 3D scéna, služby, cenník, postup, o nás, recenzie, FAQ, kontakt, pätička, dialógy `#svc-dlg` a `#book-dlg` |
 | `cookies.html`, `zasady-ochrany-osobnych-udajov.html`, `informacie-pre-spotrebitela.html` | Právne stránky (`js/legal.js` doplní údaje o firme) |
 | `js/config.js` | **Jediné miesto s údajmi o firme** (`window.PLS`): telefón, adresa, IČO…, cenník, Google hodnotenie, `bookingEndpoint`. Prázdne hodnoty sa na webe zobrazia ako žlté „doplniť“. |
-| `js/services.js` | Zoznam 8 služieb (texty, ikony, fotky, smer bubliny `normal`, krátky mobilný názov `mob`, vzdialenosť priblíženia `zoom`) |
+| `js/services.js` | Zoznam 8 služieb (texty, ikony, smer bubliny `normal`, krátky mobilný názov `mob`, vzdialenosť priblíženia `zoom`) |
 | `js/main.js` | Štart: statický obrázok s bublinami, spustenie 3D (desktop hneď, mobil po ťuknutí / potiahnutí) |
 | `js/scene.js` | 3D scéna (three.js z `vendor/three/`): úvodná jazda cez vráta, otáčanie auta, bubliny, priblíženie na službu (`focus`/`unfocus`) |
 | `js/views.js` | Pohľady kamery `wide` (PC) / `tall` (mobil) a úvodná jazda. JSON medzi `/*JSON*/…/*END*/` číta aj `tools/render_poster.py`. |
@@ -31,9 +31,9 @@ Statická stránka – iba HTML/CSS/JS, **bez servera a bez build kroku**. Súbo
 | `js/extras.js` | Obdĺžniky služieb, cenník, Google hodnotenie, sezónny oznam, mobilná lišta, Plausible |
 | `js/poster-data.js` | Vygenerované pozície bublín na statických obrázkoch |
 | `css/style.css` | Všetky štýly; mobil v `@media(max-width:760px)` |
-| `assets/` | `poster.webp` (PC, fasáda), `poster-m.webp` (mobil), `photos/` |
+| `assets/` | `poster.webp` (PC, fasáda), `poster-m.webp` (mobil) |
 | `models/garage.glb` | 3D garáž + auto (Draco). Pri zmene zvýš `?v=` v `scene.js`. |
-| `tools/` | Blender pipeline (nie je súčasť webu) |
+| `tools/` | Blender pipeline (nie je súčasť webu); `tools/garage.blend` sa generuje a nie je v gite |
 
 ## 3D pipeline (Blender 5.3)
 
