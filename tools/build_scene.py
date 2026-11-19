@@ -324,7 +324,7 @@ G = empty("Garage")
 # podlaha, okolie
 box("Floor", (GW, GD, 0.1), (0, 0, -0.05), M["floor"], G, uv=(2.0, 2.0))
 box("Ground", (70, 46, 0.1), (0, -26 - GD / 2, -0.07), M["asphalt"], G)
-box("Apron", (17.0, 6.2, 0.06), (0, FY - T - 3.1, -0.03), M["concrete"], G)
+box("Apron", (17.0, 6.5, 0.06), (0, FY - T - 2.95, -0.03), M["concrete"], G)   # dosiahne až po podlahu garáže (bez medzery pod vrátami)
 # bezpečnostné čiary pri stenách
 for nm, s, l in (("LineL", (0.06, GD - 0.8, 0.004), (-GW / 2 + 0.75, 0, 0.002)),
                  ("LineR", (0.06, GD - 0.8, 0.004), (GW / 2 - 0.75, 0, 0.002)),
@@ -389,15 +389,16 @@ text3d("SignText", "PLS GROUP", 0.42, (-0.9, SY - 0.06, 2.31), M["white"], sg, e
 text3d("SignSub", "AUTOSERVIS", 0.13, (-0.9, SY - 0.06, 2.13), M["orange"], sg, extrude=0.01)
 
 # ---- vráta (pivot hore – JS ich "zroluje" nahor)
-door = empty("Door", (0, FY - T + 0.04, OH), G)
+DW = OW - 0.03
+door = empty("Door", (0, FY - T + 0.11, OH - 0.004), G)
 n_pan = 7
 ph = OH / n_pan
 for i in range(n_pan):
     z = -(i + 0.5) * ph
-    box(f"DoorPanel{i}", (OW, 0.06, ph - 0.01), (0, 0, z), M["door"], door, bevel=0.01)
-    box(f"DoorRib{i}", (OW - 0.12, 0.012, 0.03), (0, -0.034, z + ph * 0.22), M["dark"], door)
-box("DoorStripe", (OW, 0.064, 0.05), (0, -0.002, -OH * 0.5), M["orange"], door)
-box("DoorBacking", (OW, 0.01, OH), (0, 0.035, -OH / 2), M["dark"], door)
+    box(f"DoorPanel{i}", (DW, 0.06, ph - 0.01), (0, 0, z), M["door"], door, bevel=0.01)
+    box(f"DoorRib{i}", (DW - 0.12, 0.012, 0.03), (0, -0.034, z + ph * 0.22), M["dark"], door)
+box("DoorStripe", (DW, 0.064, 0.05), (0, -0.002, -OH * 0.5), M["orange"], door)
+box("DoorBacking", (DW, 0.01, OH - 0.01), (0, 0.037, -OH / 2), M["dark"], door)
 
 # ---- fasáda: veľká tehlová budova, podsvietený nápis, okná, svetlá
 FF = FY - T                     # vonkajšia plocha prednej steny
@@ -412,9 +413,9 @@ box("Cornice", (FW + 0.3, 0.4, 0.3), (0, FF - 0.12, FH - 0.05), M["beam"], fs)
 for sx in (-1, 1):
     box(f"Pilaster{sx}", (0.35, 0.18, FH), (sx * (FW / 2 - 0.17), FF - 0.12, FH / 2 - 0.05), M["beam"], fs)
 # rám vrát
-for nm, s_, l in (("FrameL", (0.16, 0.12, OH + 0.16), (-OW / 2 - 0.08, FF - 0.1, (OH + 0.16) / 2)),
-                  ("FrameR", (0.16, 0.12, OH + 0.16), (OW / 2 + 0.08, FF - 0.1, (OH + 0.16) / 2)),
-                  ("FrameT", (OW + 0.32, 0.12, 0.16), (0, FF - 0.1, OH + 0.08))):
+for nm, s_, l in (("FrameL", (0.17, 0.115, OH + 0.165), (-OW / 2 - 0.09, FF - 0.135, (OH + 0.165) / 2 + 0.003)),
+                  ("FrameR", (0.17, 0.115, OH + 0.165), (OW / 2 + 0.09, FF - 0.135, (OH + 0.165) / 2 + 0.003)),
+                  ("FrameT", (OW + 0.35, 0.115, 0.165), (0, FF - 0.135, OH + 0.088))):
     box(nm, s_, l, M["orange"], fs)
 # veľká svetelná tabuľa nad vrátami
 SZ = OH + 1.05

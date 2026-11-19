@@ -27,40 +27,27 @@ if (!webgl()) {
       onBubble: openService,
       reduced,
       onProgress: (p) => {
-        intro.style.opacity = String(1 - Math.min(1, p / 0.1));
-        hint.classList.toggle("on", p > 0.5 && p < 0.88);
+        hint.classList.toggle("on", p > 0.49 && p < 0.88);
         cta.classList.toggle("on", p > 0.9);
       },
     });
     loader.classList.add("done");
+    // Úvod: hneď po načítaní sa otvoria vráta a kamera vojde k autu (~1.4 s).
+    // Potom scroll ovláda už len otáčanie auta – späť von z garáže sa nedá.
+    const P0 = 0.5;
+    let introDone = reduced;
     const readProgress = () => {
+      if (!introDone) return;
       const r = wrap.getBoundingClientRect();
       const total = wrap.offsetHeight - innerHeight;
-      api.setProgress(total > 0 ? -r.top / total : 1);
+      const f = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 1;
+      api.setProgress(P0 + (1 - P0) * f);
+      intro.style.opacity = String(1 - Math.min(1, f / 0.06));
     };
     addEventListener("scroll", readProgress, { passive: true });
     addEventListener("resize", readProgress);
-    readProgress();
-    // úvodný nájazd: po 1 s automaticky vojdeme cez vráta k autu (užívateľ ho môže kedykoľvek prerušiť)
-    if (!reduced && scrollY < 20 && !location.hash) {
-      const total = () => wrap.offsetHeight - innerHeight;
-      const to = () => wrap.offsetTop + total() * 0.47;
-      let stop = false;
-      const cancel = () => { stop = true; };
-      ["wheel", "touchstart", "keydown", "mousedown"].forEach((e) => addEventListener(e, cancel, { once: true, passive: true }));
-      setTimeout(() => {
-        if (stop || scrollY > 20) return;
-        const from = scrollY, end = to(), dur = 2600, t0 = performance.now();
-        const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-        const step = (now) => {
-          if (stop) return;
-          const t = Math.min(1, (now - t0) / dur);
-          scrollTo(0, from + (end - from) * ease(t));
-          if (t < 1) requestAnimationFrame(step);
-        };
-        requestAnimationFrame(step);
-      }, 1000);
-    }
+    if (reduced) readProgress();
+    else api.playIntro(P0, 1400, () => { introDone = true; readProgress(); });
     new IntersectionObserver(([e]) => (e.isIntersecting ? api.resume() : api.pause())).observe(wrap);
     window.__scene = api;
   } catch (err) {

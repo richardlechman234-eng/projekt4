@@ -33,7 +33,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x10141a);
   scene.fog = new THREE.Fog(0x10141a, 18, 48);
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.15, 80);
 
   // prostredie pre odlesky laku
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -62,7 +62,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   scene.add(facadeLamp, facadeLamp.target);
 
   // model (garáž + auto vymodelované v Blenderi, export GLB)
-  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=7");
+  const gltf = await new GLTFLoader().loadAsync("models/garage.glb?v=8");
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {
@@ -98,6 +98,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
   // --- stav ---
   let target = reduced ? 1 : 0, cur = target;
+  let intro = null;   // časový úvod: {t0, dur, to}
   const setTarget = (p) => { target = reduced ? 1 : clamp(p); };
   const tmpP = new THREE.Vector3(), tmpT = new THREE.Vector3(), w = new THREE.Vector3(), nW = new THREE.Vector3(), q = new THREE.Quaternion();
 
@@ -125,8 +126,15 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
     const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000);
     last = now;
     // plynulé dobiehanie podľa času (nezávislé od FPS)
-    cur += (target - cur) * (reduced ? 1 : 1 - Math.exp(-dt * 7));
-    if (Math.abs(target - cur) < 0.0004) cur = target;
+    if (intro) {
+      const t = clamp((now - intro.t0) / intro.dur);
+      const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      cur = target = intro.to * e;
+      if (t >= 1) { const done = intro.done; intro = null; done && done(); }
+    } else {
+      cur += (target - cur) * (reduced ? 1 : 1 - Math.exp(-dt * 7));
+      if (Math.abs(target - cur) < 0.0004) cur = target;
+    }
     // slabý výkon → nižšie rozlíšenie
     if (dt > 0.045) { if (++slow > 20 && dpr > 1) { dpr = 1; renderer.setPixelRatio(dpr); renderer.setSize(W, H, false); } } else slow = Math.max(0, slow - 1);
     const p = cur;
@@ -180,7 +188,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
 
   let running = true;
   let loopId = 0;
-  const kick = () => { if (!loopId) { last = performance.now(); loopId = requestAnimationFrame(function tick() { loopId = 0; if (running) { frame(); if (target !== cur) loopId = requestAnimationFrame(tick); } }); } };
+  const kick = () => { if (!loopId) { last = performance.now(); loopId = requestAnimationFrame(function tick() { loopId = 0; if (running) { frame(); if (target !== cur || intro) loopId = requestAnimationFrame(tick); } }); } };
 
   resize();
   new ResizeObserver(() => { resize(); kick(); }).observe(canvas);
@@ -188,7 +196,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, onProgress, red
   kick();
 
   return {
-    setProgress: (p) => { setTarget(p); kick(); },
+    setProgress: (p) => { if (!intro) { setTarget(p); kick(); } },
+    playIntro: (to, dur, done) => { intro = { t0: performance.now(), dur, to, done }; kick(); },
     pause: () => { running = false; },
     resume: () => { running = true; kick(); },
     kick,

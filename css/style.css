@@ -42,7 +42,7 @@ nav ul a:hover{background-size:100% 3px}
 .burger{display:none;background:none;border:2px solid var(--w);padding:8px 13px;cursor:pointer;font-family:var(--head);font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--w)}
 
 /* ---------- 3D scene ---------- */
-.scene-wrap{position:relative;height:520vh;background:#0d0f12}
+.scene-wrap{position:relative;height:300vh;background:#0d0f12}
 .scene{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
 .loader{position:absolute;inset:0;display:grid;place-items:center;background:#0d0f12;color:var(--w);font-family:var(--head);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:22px;z-index:5;transition:opacity .5s}
@@ -51,9 +51,9 @@ nav ul a:hover{background-size:100% 3px}
 .loader b:after{content:"";position:absolute;inset:0;width:40%;background:var(--o);animation:ld 1s ease-in-out infinite alternate}
 @keyframes ld{to{transform:translateX(150%)}}
 .hud{position:absolute;inset:0;pointer-events:none;z-index:3;color:var(--w)}
-.hero-intro{position:absolute;left:50%;bottom:3vh;transform:translateX(-50%);text-align:center;transition:opacity .3s;width:min(94vw,900px)}
-.hero-intro .t{font-family:var(--head);font-weight:800;font-size:clamp(54px,10vw,128px);line-height:.9;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 4px 30px rgba(0,0,0,.85)}
-.hero-intro .sub{margin-top:8px;font-family:var(--head);font-weight:700;font-size:clamp(20px,2.6vw,32px);letter-spacing:.08em;text-transform:uppercase;text-shadow:0 2px 18px rgba(0,0,0,.8)}
+.hero-intro{position:absolute;left:clamp(16px,4vw,64px);bottom:4vh;text-align:left;transition:opacity .3s;width:min(92vw,560px);pointer-events:none}
+.hero-intro .t{font-family:var(--head);font-weight:800;font-size:clamp(44px,6.5vw,92px);line-height:.9;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 4px 30px rgba(0,0,0,.85)}
+.hero-intro .sub{margin-top:8px;font-family:var(--head);font-weight:700;font-size:clamp(17px,2vw,26px);letter-spacing:.08em;text-transform:uppercase;text-shadow:0 2px 18px rgba(0,0,0,.8)}
 .hero-intro .sub em{font-style:normal;color:var(--o)}
 .hero-intro .s{margin-top:6px;opacity:.9;text-shadow:0 2px 12px rgba(0,0,0,.8);font-size:18px}
 .arrow{display:inline-block;margin-top:14px;width:26px;height:26px;border-right:3px solid var(--o);border-bottom:3px solid var(--o);transform:rotate(45deg);animation:bob 1.4s ease-in-out infinite}
@@ -216,7 +216,7 @@ dialog[open]{animation:pop .22s ease-out}
   .bubble .lab{display:none}
   .bubble .dot{width:46px;height:46px}
   .hint{top:76px;font-size:14px}
-  .scene-wrap{height:440vh}
+  .scene-wrap{height:260vh}
 }
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
