@@ -3,7 +3,7 @@
 // POZOR: obsah medzi /*JSON*/ a /*END*/ musí ostať platný JSON – číta ho aj tools/render_poster.py.
 export const VIEWS = /*JSON*/{
   "wide": { "pos": [1.30, 1.54, 4.75], "tgt": [0.00, 0.80, 0.35], "hfov": 88.8, "vmax": 62, "yaw": -0.32 },
-  "tall": { "pos": [1.10, 1.55, 6.20], "tgt": [-0.40, 0.50, 0.30], "hfov": 66.0, "vmax": 80, "yaw": -0.42 },
+  "tall": { "pos": [1.10, 1.55, 6.20], "tgt": [-0.40, 0.50, 0.30], "hfov": 48.0, "vmax": 80, "yaw": -0.42 },
   "odtah": { "wide": [1.60, 0.45, 1.95], "tall": [1.20, 0.30, 3.60] }
 }/*END*/;
 // "odtah" = pevný bod v garáži pre každý pohľad (mimo auta, na podlahe vpravo pred autom) – bublina Odťah sa s autom neotáča.

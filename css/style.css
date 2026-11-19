@@ -334,13 +334,25 @@ dialog.side li:before{top:13px}
   .steps{grid-template-columns:1fr 1fr}.step:nth-child(3){padding-left:0;border-left:0}.step:nth-child(n+3){border-top:2px solid var(--k);margin-top:26px}
   .sheet{grid-template-columns:1fr}.sheet .ph{min-height:140px}
 }
-@media(max-width:760px){
-  body{font-size:17px}
-  section.sec{padding:68px 0}
+@media(max-width:1100px){
   .burger{display:block;margin-left:auto}
   nav ul{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;gap:0;background:rgba(13,15,18,.97);padding:6px 24px 14px}
   nav ul a{display:block;padding:14px 0;border-top:1px solid rgba(255,255,255,.14);background:none}
   header.top.open nav ul{display:flex}
+  nav>.btn{margin-left:12px}
+  .callouts .bubble:not(.inl) .lab{display:block;top:0;left:0;right:auto;margin:0;transform:none;height:26px;line-height:26px;padding:0 9px;font-size:13px;letter-spacing:.06em;border:0;border-left:3px solid var(--o);border-radius:6px;background:rgba(13,15,18,.9);box-shadow:0 4px 14px rgba(0,0,0,.45)}
+  .callouts .bubble.left:not(.inl) .lab{border-right:0;border-left:3px solid var(--o)}
+  .callouts .bubble.inl .lab{display:block;font-size:14px;padding:6px 11px}
+  .leaders{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .leaders line{stroke:var(--w);stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(0,0,0,.9))}
+  .leaders line.hot{stroke:var(--o);stroke-width:3}
+  .chips{display:none!important}
+  .callouts .bubble:hover .lab,.callouts .bubble:focus-visible .lab,.callouts .bubble.hot .lab{background:var(--hl);color:var(--k);border-left-color:var(--o)}
+  .bubble .lab{display:none}
+}
+@media(max-width:760px){
+  body{font-size:17px}
+  section.sec{padding:68px 0}
   nav>.btn{display:none}
   .logo small{display:none}
   .cards{grid-template-columns:1fr}
@@ -348,13 +360,6 @@ dialog.side li:before{top:13px}
   .fgrid{grid-template-columns:1fr}.slots{grid-template-columns:repeat(4,1fr)}
   .book,.sheet .body{padding:26px 20px}
   .bubble .lab{display:none}
-  .callouts .bubble:not(.big) .lab{display:block;top:0;left:0;right:auto;margin:0;transform:none;height:26px;line-height:26px;padding:0 9px;font-size:13px;letter-spacing:.06em;border:0;border-left:3px solid var(--o);border-radius:6px;background:rgba(13,15,18,.9);box-shadow:0 4px 14px rgba(0,0,0,.45)}
-  .callouts .bubble.left:not(.big) .lab{border-right:0;border-left:3px solid var(--o)}
-  .callouts .bubble.big .lab{display:block;font-size:14px;padding:6px 11px}
-  .leaders{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-  .leaders line{stroke:var(--w);stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(0,0,0,.9))}
-  .leaders line.hot{stroke:var(--o);stroke-width:3}
-  .chips{display:none!important}
   .static .hint{display:none}
   .bubble,.bubble .dot{width:44px;height:44px}
   .bubble.big,.bubble.big .dot{width:60px;height:60px}.bubble.big svg{width:30px;height:30px}
@@ -392,7 +397,6 @@ dialog.side li:before{top:13px}
   dialog.side[open]{animation:sheetup .3s ease-out}
   dialog.side .body{padding:20px 18px 18px}
   dialog.side h3{font-size:28px;margin:4px 0 8px}
-  .callouts .bubble:hover .lab,.callouts .bubble:focus-visible .lab,.callouts .bubble.hot .lab{background:var(--hl);color:var(--k);border-left-color:var(--o)}
   .svc-side .mbar{opacity:0;pointer-events:none}
 }
 @media(prefers-reduced-motion:reduce){
@@ -404,4 +408,4 @@ dialog.side li:before{top:13px}
 
 .nojs .scene-wrap{display:none}
 .static .scene{touch-action:pan-y}
-@media(max-width:380px){.callouts .bubble:not(.big) .lab{font-size:12px;padding:0 6px;letter-spacing:.04em}}
+@media(max-width:380px){.callouts .bubble:not(.inl) .lab{font-size:12px;padding:0 6px;letter-spacing:.04em}}
