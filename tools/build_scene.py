@@ -402,7 +402,7 @@ SY = GD / 2 - 0.06
 box("SignBoard", (3.2, 0.05, 0.75), (-1.15, SY, 2.45), M["beam"], sg, bevel=0.01)
 box("SignGlow", (3.3, 0.02, 0.03), (-1.15, SY - 0.03, 2.06), M["orangeGlow"], sg)
 box("SignP", (0.5, 0.06, 0.5), (-2.4, SY - 0.04, 2.45), M["orange"], sg)
-text3d("SignPChar", "P", 0.44, (-2.4, SY - 0.08, 2.29), M["beam"], sg, extrude=0.012)
+text3d("SignPChar", "PLS", 0.21, (-2.4, SY - 0.08, 2.375), M["white"], sg, extrude=0.012)   # biele PLS ako favicon
 text3d("SignText", "PLS GROUP", 0.42, (-0.9, SY - 0.06, 2.31), M["white"], sg, extrude=0.02)
 text3d("SignSub", "AUTOSERVIS", 0.13, (-0.9, SY - 0.06, 2.13), M["orange"], sg, extrude=0.01)
 
