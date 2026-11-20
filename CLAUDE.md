@@ -39,7 +39,7 @@ Statická stránka – iba HTML/CSS/JS, **bez servera a bez build kroku**. Súbo
 
 - Scéna: `"/c/Program Files/Blender Foundation/Blender 5.3/blender.exe" -b --factory-startup --python tools/build_scene.py` → `models/garage.glb` + `tools/garage.blend` (~1 min).
 - Statický obrázok pre mobil a pozície bublín: `... --python tools/render_poster.py -- --tall-only` (~3 min). `-- --pts-only` = len pozície.
-  `assets/poster.webp` (fasáda) **neprepisovať** – je z gitu.
+  `assets/poster.webp` (fasáda, PC): `... --python tools/render_facade.py` (~30 s) – render_poster.py ho neprepisuje.
 - Obrázok na zdieľanie a ikona pre iPhone: `... --python tools/render_og.py` → `assets/og-image.jpg` (1200×630), `assets/apple-touch-icon.png` (180×180). `-- --reuse-bg` = len texty, bez nového renderu garáže.
 - Zdrojový model auta `tools/src/skoda_octavia_mk4_rs.glb` je v `.gitignore` (CC BY 4.0, DR1KING100K – uvedené v pätičke a `tools/src/ATTRIBUTION.txt`).
 

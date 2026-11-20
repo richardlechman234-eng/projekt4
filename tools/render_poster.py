@@ -51,7 +51,7 @@ for key, (w, h, fname) in {"wide": (1600, 900, "poster.webp"), "tall": (900, 180
     out[key] = {"w": w, "h": h, "cx": round(c.x, 4), "pts": pts}
     sc.render.image_settings.file_format = "WEBP"; sc.render.image_settings.quality = 80
     sc.render.filepath = os.path.join(ROOT, "assets", fname)
-    if "--pts-only" not in sys.argv and not ("--tall-only" in sys.argv and key != "tall"):   # poster.webp (desktop) = fasáda, neprepisovať
+    if "--pts-only" not in sys.argv and not ("--tall-only" in sys.argv and key != "tall"):   # poster.webp (desktop) = fasáda → tools/render_facade.py
         bpy.ops.render.render(write_still=True)
     print("POSTER", key, vfov, pts)
 

@@ -441,7 +441,7 @@ SZ = OH + 1.05
 box("Fascia", (9.6, 0.16, 1.35), (0, FF - 0.14, SZ), M["beam"], fs, bevel=0.02)
 box("FasciaGlow", (9.7, 0.05, 0.05), (0, FF - 0.2, SZ - 0.7), M["orangeGlow"], fs)
 box("FacadeSignP", (1.0, 0.1, 1.0), (-4.05, FF - 0.25, SZ), M["orange"], fs, bevel=0.01)
-text3d("FacadeSignPChar", "P", 0.95, (-4.05, FF - 0.31, SZ - 0.34), M["beam"], fs, extrude=0.02)
+text3d("FacadeSignPChar", "PLS", 0.42, (-4.05, FF - 0.31, SZ - 0.15), M["white"], fs, extrude=0.02)   # biele PLS ako favicon
 text3d("FacadeSignText", "PLS GROUP", 0.92, (-3.35, FF - 0.24, SZ - 0.18), M["signGlow"], fs, extrude=0.04, align="LEFT")
 text3d("FacadeSignSub", "AUTOSERVIS  ·  BRATISLAVA", 0.24, (-3.33, FF - 0.24, SZ - 0.52), M["orangeGlow"], fs, extrude=0.015, align="LEFT")
 # okná kancelárie a vchod
