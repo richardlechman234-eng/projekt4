@@ -25,10 +25,10 @@ Statická stránka – iba HTML/CSS/JS, **bez servera a bez build kroku**. Súbo
 | `js/services.js` | Zoznam 8 služieb (texty, ikony, smer bubliny `normal`, krátky mobilný názov `mob`, vzdialenosť priblíženia `zoom`) |
 | `js/main.js` | Štart: statický obrázok s bublinami, spustenie 3D (desktop hneď, mobil po ťuknutí / potiahnutí) |
 | `js/scene.js` | 3D scéna (three.js z `vendor/three/`): úvodná jazda cez vráta, otáčanie auta, bubliny, priblíženie na službu (`focus`/`unfocus`) |
-| `js/views.js` | Pohľady kamery `wide` (PC) / `tall` (mobil) a úvodná jazda. JSON medzi `/*JSON*/…/*END*/` číta aj `tools/render_poster.py`. |
+| `js/views.js` | Pohľady kamery `wide` (PC) / `tall` (mobil) a úvodná jazda. `odtah` = bod bubliny Odťah, `sign` = tabuľa ODŤAH pri pravej stene (musí sedieť s `TOW_LOC`/`TOW_YAW` v `tools/build_scene.py`); detail Odťahu má panel vľavo. JSON medzi `/*JSON*/…/*END*/` číta aj `tools/render_poster.py`. |
 | `js/callouts.js` | Mobil: popisky bublín s čiarami nad/pod autom |
 | `js/ui.js` | Detail služby (okno alebo bočný panel), **objednávkový formulár** (`openBooking`, `submit`, `.ics`), globálne kliky `data-open` / `data-book` / `data-close`, menu, mapa |
-| `js/extras.js` | Obdĺžniky služieb, cenník, Google hodnotenie, sezónny oznam, mobilná lišta, Plausible |
+| `js/extras.js` | Cenník, Google hodnotenie, sezónny oznam, mobilná lišta, Plausible |
 | `js/poster-data.js` | Vygenerované pozície bublín na statických obrázkoch |
 | `css/style.css` | Všetky štýly; mobil v `@media(max-width:760px)` |
 | `assets/` | `poster.webp` (PC, fasáda), `poster-m.webp` (mobil), `og-image.jpg` (zdieľanie), `favicon.svg`, `apple-touch-icon.png` |

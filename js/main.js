@@ -58,8 +58,6 @@ function showStatic() {
     bubblesEl.appendChild(el);
     return { el, id: sv.id };
   });
-  // obdĺžniky → zvýraznenie statických bublín
-  window.__scene = { highlight: (id) => { staticEls.forEach((b) => b.el.classList.toggle("hot", b.id === id)); document.dispatchEvent(new CustomEvent("svc-highlight", { detail: id })); } };
   const ready = () => placeStatic();
   if (poster.complete) ready(); else poster.addEventListener("load", ready, { once: true });
   addEventListener("resize", placeStatic);
@@ -85,7 +83,7 @@ const waitTop = () => new Promise((res) => {
   const t0 = performance.now();
   (function check() { if (scrollY < 5 || performance.now() - t0 > 1200) res(); else requestAnimationFrame(check); })();
 });
-// detail služby (bublina, obdĺžnik aj karta v sekcii Služby): vyjsť ku garáži, priblížiť auto na miesto služby,
+// detail služby (bublina aj karta v sekcii Služby): vyjsť ku garáži, priblížiť auto na miesto služby,
 // text vpravo (mobil dole), auto vľavo – pol na pol. Bez 3D (zlyhanie WebGL) klasické okno.
 let busySvc = false;
 async function showService(id) {
@@ -98,7 +96,7 @@ async function showService(id) {
     const api = api3d || (await start3d());
     if (!api) return openService(id);
     await api.focus(id);
-    openService(id, { side: true });
+    openService(id, { side: true, left: id === "odtah" });   // Odťah: tabuľa je vpravo pri stene → text vľavo
   } finally { busySvc = false; }
 }
 window.__openSvc = showService;
@@ -142,9 +140,9 @@ async function load3d() {
   }
 }
 
-const cta = document.querySelector(".cta-bar"), chipsBox = document.querySelector(".chips");
+const cta = document.querySelector(".cta-bar");
 function hud(on) {
-  [hint, cta, chipsBox].forEach((el) => el?.classList.toggle("on", on));
+  [hint, cta].forEach((el) => el?.classList.toggle("on", on));
 }
 
 hint.textContent = touch ? "Ťuknite na bublinu a uvidíte, čo robíme" : "Kliknite na bublinu a uvidíte, čo robíme";

@@ -95,20 +95,6 @@ nav ul a:hover{background-size:100% 3px}
 .callbig:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--k)}
 
 /* obdĺžniky služieb v scéne – vpravo hore, pod sebou */
-.chips{position:absolute;right:clamp(16px,2.4vw,40px);top:84px;display:flex;flex-direction:column;align-items:stretch;gap:10px;width:max-content;opacity:0;transition:opacity .45s;pointer-events:none}
-.has-season .chips{top:140px}
-.chips.on{opacity:1;pointer-events:auto}
-.chip{display:inline-flex;align-items:center;gap:14px;padding:11px 24px 11px 11px;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(16,19,24,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--w);font-family:var(--head);font-weight:700;font-size:19px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap;text-align:left;box-shadow:0 8px 24px rgba(0,0,0,.35);transition:background .15s,border-color .15s,transform .15s,color .15s}
-.chip .ci{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--o);color:var(--k);flex:none;transition:background .15s,color .15s}
-.chip .ci svg{width:23px;height:23px}
-.chip:hover,.chip:focus-visible,.chip.hot{background:var(--hl);border-color:var(--hl);color:var(--k);transform:translateX(-6px)}
-.chip:hover .ci,.chip:focus-visible .ci,.chip.hot .ci{background:var(--k);color:var(--w)}
-@media(min-width:761px) and (max-height:820px){
-  .chips{gap:7px}.chip{padding:8px 20px 8px 8px;font-size:17px}.chip .ci{width:34px;height:34px}.chip .ci svg{width:20px;height:20px}
-}
-@media(min-width:761px) and (max-height:680px){
-  .chips{gap:5px}.chip{padding:5px 14px 5px 5px;font-size:14px}.chip .ci{width:26px;height:26px}.chip .ci svg{width:16px;height:16px}
-}
 @media(min-width:761px) and (max-width:1100px){ .hero-intro{display:none} }
 
 /* ---------- services list ---------- */
@@ -261,16 +247,20 @@ dialog.side h3{font-size:36px}
 dialog.side li{font-size:16px;padding:6px 0 6px 28px}
 dialog.side li:before{top:13px}
 dialog.side .body{padding:clamp(24px,3.4vw,52px)}
+/* Odťah: tabuľa je pri pravej stene → panel vľavo */
+dialog.side.left{inset:var(--hdr,70px) 50% 0 0;border-left:0;border-right:4px solid var(--o);box-shadow:20px 0 60px rgba(0,0,0,.45)}
+dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
 /* na výšku (mobil, tablet): auto hore, text dole – pol na pol */
 @media (max-aspect-ratio:1/1){
-  dialog.side{inset:50svh 0 0 0;border-left:0;border-top:4px solid var(--o);box-shadow:0 -14px 40px rgba(0,0,0,.5)}
-  dialog.side[open]{animation:sheetup .3s ease-out}
+  dialog.side,dialog.side.left{inset:50svh 0 0 0;border-left:0;border-right:0;border-top:4px solid var(--o);box-shadow:0 -14px 40px rgba(0,0,0,.5)}
+  dialog.side[open],dialog.side.left[open]{animation:sheetup .3s ease-out}
   dialog.side .body{padding:20px 18px 18px}
   dialog.side h3{font-size:28px;margin:4px 0 8px}
 }
-.svc-side .chips,.svc-side .cta-bar,.svc-side .hint{opacity:0!important;pointer-events:none!important}
+.svc-side .cta-bar,.svc-side .hint{opacity:0!important;pointer-events:none!important}
 @keyframes sheetup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 @keyframes slidein{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes slideleft{from{transform:translateX(-40px);opacity:0}to{transform:none;opacity:1}}
 @keyframes pop{from{opacity:0;transform:translateY(16px)}}
 .x{position:absolute;right:0;top:0;z-index:2;width:50px;height:50px;border:0;background:var(--k);color:var(--w);font-family:var(--head);font-size:30px;line-height:1;cursor:pointer}
 .x:hover{background:var(--o);color:var(--k)}
@@ -350,7 +340,6 @@ dialog.side .body{padding:clamp(24px,3.4vw,52px)}
   .leaders{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
   .leaders line{stroke:var(--w);stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(0,0,0,.9))}
   .leaders line.hot{stroke:var(--o);stroke-width:3}
-  .chips{display:none!important}
   .callouts .bubble:hover .lab,.callouts .bubble:focus-visible .lab,.callouts .bubble.hot .lab{background:var(--hl);color:var(--k);border-left-color:var(--o)}
   .bubble .lab{display:none}
 }
@@ -375,11 +364,6 @@ dialog.side .body{padding:clamp(24px,3.4vw,52px)}
   .static .go3d{display:flex;align-items:center;gap:10px;position:absolute;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);pointer-events:auto;padding:13px 22px;border-radius:14px;border:2px solid var(--w);background:var(--o);color:var(--k);font-family:var(--head);font-weight:800;font-size:18px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.45);cursor:pointer}
   .go3d svg{width:24px;height:24px;fill:currentColor}
   .go3d:disabled{opacity:.6}
-  .chips{flex-direction:row;align-items:center;right:0;left:0;top:72px;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;width:100%;padding:4px 16px;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent)}
-  .chips::-webkit-scrollbar{display:none}
-  .chip{scroll-snap-align:start;font-size:16px;padding:9px 16px 9px 9px}
-  .chip:hover,.chip:focus-visible,.chip.hot{transform:none}
-  .chip .ci{width:32px;height:32px}.chip .ci svg{width:19px;height:19px}
   .afacts{grid-template-columns:1fr 1fr 1fr;gap:8px}.afacts li{padding:12px 10px}.afacts b{font-size:28px}.afacts span{font-size:13px}
   .gbadge{padding:20px;gap:16px}.gnum b{font-size:46px}.stars i{width:20px;height:20px}.glogo{width:48px;height:48px}.glogo svg{width:28px;height:28px}
   .gacts .btn{width:100%}
@@ -387,7 +371,6 @@ dialog.side .body{padding:clamp(24px,3.4vw,52px)}
   .qa summary{font-size:19px;padding:16px 52px 16px 18px}
   .season{top:76px;left:12px;right:12px;transform:none;width:auto}
   .season p{font-size:13px}
-  .has-season .chips{top:146px}
   .has-season .hint{top:auto}
   .mbar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:45;padding:8px;border-radius:16px;background:rgba(13,15,18,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
   .mb{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 6px;border-radius:11px;border:0;background:rgba(255,255,255,.1);color:var(--w);font-family:var(--head);font-weight:700;font-size:16px;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;cursor:pointer}

@@ -1,33 +1,15 @@
-/* Doplnky: obdĺžniky služieb v scéne, cenník, Google hodnotenie, sezónny oznam, mobilná lišta, štatistika. */
-import { SERVICES } from "./services.js";
-
+/* Doplnky: cenník, Google hodnotenie, sezónny oznam, mobilná lišta, štatistika. */
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const CO = window.PLS || {};
 const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
 
 export function initExtras() {
-  chips();
   prices();
   reviews();
   season();
   mobileBar();
   analytics();
-}
-
-/* ---------- obdĺžniky služieb pod autom (to isté ako bubliny) ---------- */
-function chips() {
-  const box = $(".chips");
-  if (!box) return;
-  box.innerHTML = SERVICES.map((s) => `<button class="chip" type="button" data-open="${s.id}" data-id="${s.id}"><span class="ci">${s.icon}</span><span>${esc(s.title)}</span></button>`).join("");
-  const mark = (id) => box.querySelectorAll(".chip").forEach((c) => c.classList.toggle("hot", c.dataset.id === id));
-  // bez 3D scény (zlyhanie WebGL) zvýrazníme aspoň samotný obdĺžnik
-  const hl = (id) => (window.__scene?.highlight ? window.__scene.highlight(id) : mark(id));
-  document.addEventListener("svc-highlight", (e) => mark(e.detail));
-  box.addEventListener("pointerover", (e) => { const c = e.target.closest(".chip"); if (c) hl(c.dataset.id); });
-  box.addEventListener("pointerleave", () => hl(null));
-  box.addEventListener("focusin", (e) => { const c = e.target.closest(".chip"); if (c) hl(c.dataset.id); });
-  box.addEventListener("focusout", () => hl(null));
 }
 
 /* ---------- orientačný cenník ---------- */

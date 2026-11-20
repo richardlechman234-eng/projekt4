@@ -8,11 +8,13 @@ const CO = window.PLS || {};
 /* ------------------------------------------------------------ detail služby */
 const svcDlg = $("#svc-dlg");
 // side = bočný panel pri priblíženom aute (bez fotky, bez stmavenia), inak klasické okno
-export function openService(id, { side = false } = {}) {
+// left = bočný panel vľavo (Odťah – tabuľa je pri pravej stene); na výšku je panel vždy dole
+export function openService(id, { side = false, left = false } = {}) {
   const s = byId(id);
   if (!s) return;
   if (svcDlg.open && svcDlg.classList.contains("side") !== side) svcDlg.close();
   svcDlg.classList.toggle("side", side);
+  svcDlg.classList.toggle("left", side && left);
   document.documentElement.classList.toggle("svc-side", side);
   const idx = SERVICES.indexOf(s) + 1;
   svcDlg.innerHTML = `

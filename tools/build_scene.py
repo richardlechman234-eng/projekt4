@@ -820,14 +820,38 @@ for lv, z in enumerate((0.40, 1.43)):
 # ---- pravá stena: police s olejmi, kompresor, hasiaci prístroj, stohy pneumatík
 sh = empty("RightShelf", (0, 0, 0), G)
 SX = GW / 2 - 0.3
-for z in (1.55, 2.05):
-    box("ShelfBoard", (0.35, 2.2, 0.04), (SX, 1.0, z), M["shelf"], sh)
+for z in (1.55, 2.05):                 # police sú v prednej časti steny (vzadu visí tabuľa Odťah)
+    box("ShelfBoard", (0.35, 2.2, 0.04), (SX, -1.3, z), M["shelf"], sh)
 cans = [M["canBlue"], M["canYellow"], M["canGreen"], M["red"]]
 for lv, z in enumerate((1.57, 2.07)):
     for i in range(9):
         cm = cans[(i + lv) % 4]
         hh = 0.26 if i % 3 else 0.32
-        box(f"Can{lv}_{i}", (0.16, 0.14, hh), (SX - 0.02, 0.05 + i * 0.22, z + hh / 2 + 0.02), cm, sh, bevel=0.01)
+        box(f"Can{lv}_{i}", (0.16, 0.14, hh), (SX - 0.02, -2.25 + i * 0.22, z + hh / 2 + 0.02), cm, sh, bevel=0.01)
+
+# ---- tabuľa ODŤAH: podsvietená, visí na reťaziach pri pravej stene, natočená k vrátam.
+# Poloha a natočenie musia sedieť s "sign" v js/views.js (kamera pri detaile Odťahu sa pozerá sem).
+TOW_LOC, TOW_YAW = (3.0, 1.0, 2.2), -math.pi / 4      # stred tabule; lícom k (-0.71, -0.71) = šikmo k vrátam
+tw = empty("TowSign", (0, 0, 0), G)                   # diely sa stavajú okolo počiatku, natočí sa až na konci
+box("TowBoard", (1.5, 0.06, 0.62), (0, 0, 0), M["beam"], tw, bevel=0.01)
+box("TowGlow", (1.56, 0.02, 0.03), (0, -0.035, -0.33), M["orangeGlow"], tw)
+box("TowGlowL", (0.03, 0.02, 0.6), (-0.765, -0.035, 0), M["orangeGlow"], tw)
+FY_T = -0.045                                         # líce piktogramu
+# piktogram odťahovky (kabína vľavo, rameno so žeriavom vpravo)
+box("TowCab", (0.15, 0.02, 0.14), (-0.6, FY_T, 0.0), M["orangeGlow"], tw)
+box("TowCabWin", (0.07, 0.02, 0.055), (-0.62, FY_T - 0.004, 0.025), M["beam"], tw)
+box("TowBed", (0.36, 0.02, 0.045), (-0.36, FY_T, -0.07), M["orangeGlow"], tw)
+box("TowBoom", (0.26, 0.02, 0.028), (-0.33, FY_T, 0.02), M["orangeGlow"], tw, rot=(0, -0.6, 0))
+box("TowCable", (0.01, 0.02, 0.11), (-0.222, FY_T, 0.04), M["orangeGlow"], tw)
+box("TowHook", (0.04, 0.02, 0.018), (-0.215, FY_T, -0.015), M["orangeGlow"], tw)
+for i, x in enumerate((-0.6, -0.29)):
+    cyl(f"TowWheel{i}", 0.048, 0.02, (x, FY_T, -0.115), M["orangeGlow"], tw, axis="Y", verts=20)
+    cyl(f"TowHub{i}", 0.018, 0.02, (x, FY_T - 0.006, -0.115), M["beam"], tw, axis="Y", verts=12)
+text3d("TowText", "ODŤAH", 0.22, (0.27, -0.05, -0.03), M["white"], tw, extrude=0.015)
+text3d("TowSub", "ZAVOLAJTE NÁM", 0.075, (0.27, -0.05, -0.19), M["orange"], tw, extrude=0.008)
+for i, x in enumerate((-0.6, 0.6)):                   # reťaze do stropu
+    cyl(f"TowChain{i}", 0.006, 0.69, (x, 0, 0.655), M["chrome"], tw, verts=6)
+tw.location = TOW_LOC; tw.rotation_euler = (0, 0, TOW_YAW)
 cyl("Extinguisher", 0.08, 0.5, (GW / 2 - 0.12, FY + 0.6, 0.85), M["extRed"], G, verts=16)
 cyl("ExtinguisherTop", 0.03, 0.08, (GW / 2 - 0.12, FY + 0.6, 1.14), M["dark"], G, verts=10)
 box("ExtSign", (0.02, 0.22, 0.22), (GW / 2 - 0.02, FY + 0.6, 1.45), M["red"], G)

@@ -58,7 +58,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
 
   // model (garáž + auto z Blendera, export GLB)
   const draco = new DRACOLoader().setDecoderPath("vendor/three/jsm/libs/draco/gltf/").setDecoderConfig({ type: "wasm" });
-  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync("models/garage.glb?v=14");
+  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync("models/garage.glb?v=15");
   draco.dispose();
   const root = gltf.scene;
   scene.add(root);
@@ -86,7 +86,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
     el.setAttribute("aria-label", s.title + " – zobraziť detail");
     el.innerHTML = `<span class="dot">${s.icon}</span><span class="lab"><span class="lf">${s.title}</span><span class="ls">${s.mob || s.title}</span></span>`;
     el.addEventListener("click", () => onBubble(s.id));
-    // prejdenie myšou / fokus → zvýrazní bublinu aj obdĺžnik služby
+    // prejdenie myšou / fokus → zvýrazní bublinu
     el.addEventListener("pointerenter", () => highlight(s.id));
     el.addEventListener("pointerleave", () => highlight(null));
     el.addEventListener("focus", () => highlight(s.id));
@@ -185,6 +185,15 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
   const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
   function focusPose(id) {
     const s = SERVICES.find((x) => x.id === id);
+    if (id === "odtah" && VIEWS.sign) {               // Odťah: kamera priletí k tabuli na pravej stene, text bude vľavo
+      const g = VIEWS.sign, tgt = new THREE.Vector3(...g.tgt), n = new THREE.Vector3(...g.n).normalize();
+      // vzdialenosť tak, aby sa celá tabuľa (1,5 m) zmestila do svojej polovice obrazu aj na užšej obrazovke
+      const tall = camera.aspect < 1, fov = tall ? 58 : 38, tn = Math.tan((fov * Math.PI) / 360) * camera.aspect;
+      const dist = clamp(Math.max(tall ? g.distTall : g.dist, (tall ? 0.95 : 1.75) / tn), 2, 4.8);
+      const pos = tgt.clone().addScaledVector(n, dist);
+      pos.y -= 0.25;
+      return { pos, tgt, fov, dyaw: 0, left: true };
+    }
     const an = car.getObjectByName("AN_" + id);
     if (!s || !an) return null;
     const n = toThree(s.normal).normalize();
@@ -241,7 +250,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
     }
     if (zoomTo && zk > 0) {
       // priblížená časť auta je v jednej polovici, text v druhej (PC: auto vľavo / text vpravo, mobil: auto hore / text dole)
-      if (camera.aspect >= 1) camera.setViewOffset(W, H, W * 0.25 * zk, 0, W, H);   // stred ľavej polovice
+      // Odťah (left): naopak – tabuľa v pravej polovici, text vľavo
+      if (camera.aspect >= 1) camera.setViewOffset(W, H, W * 0.25 * zk * (zoomTo.left ? -1 : 1), 0, W, H);
       else camera.setViewOffset(W, H, 0, H * 0.25 * zk, W, H);                     // stred hornej polovice
       camera.position.lerpVectors(P, zoomTo.pos, zk);
       camera.lookAt(T.clone().lerp(zoomTo.tgt, zk));
