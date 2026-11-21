@@ -401,10 +401,9 @@ sg = empty("BackSign", (0, 0, 0), G)
 SY = GD / 2 - 0.06
 box("SignBoard", (3.2, 0.05, 0.75), (-1.15, SY, 2.45), M["beam"], sg, bevel=0.01)
 box("SignGlow", (3.3, 0.02, 0.03), (-1.15, SY - 0.03, 2.06), M["orangeGlow"], sg)
-box("SignP", (0.5, 0.06, 0.5), (-2.4, SY - 0.04, 2.45), M["orange"], sg)
-text3d("SignPChar", "PLS", 0.21, (-2.4, SY - 0.08, 2.375), M["white"], sg, extrude=0.012)   # biele PLS ako favicon
-text3d("SignText", "PLS GROUP", 0.42, (-0.9, SY - 0.06, 2.31), M["white"], sg, extrude=0.02)
-text3d("SignSub", "AUTOSERVIS", 0.13, (-0.9, SY - 0.06, 2.13), M["orange"], sg, extrude=0.01)
+# firma nemá logo → iba názov, na stred tabule (bez oranžového štvorca)
+text3d("SignText", "PLS GROUP", 0.46, (-1.15, SY - 0.06, 2.42), M["white"], sg, extrude=0.02)
+text3d("SignSub", "AUTOSERVIS", 0.13, (-1.15, SY - 0.06, 2.20), M["orange"], sg, extrude=0.01)
 
 # ---- vráta (pivot hore – JS ich "zroluje" nahor)
 DW = OW - 0.03
@@ -440,10 +439,9 @@ for nm, s_, l in (("FrameL", (0.17, 0.115, OH + 0.165), (-OW / 2 - 0.09, FF - 0.
 SZ = OH + 1.05
 box("Fascia", (9.6, 0.16, 1.35), (0, FF - 0.14, SZ), M["beam"], fs, bevel=0.02)
 box("FasciaGlow", (9.7, 0.05, 0.05), (0, FF - 0.2, SZ - 0.7), M["orangeGlow"], fs)
-box("FacadeSignP", (1.0, 0.1, 1.0), (-4.05, FF - 0.25, SZ), M["orange"], fs, bevel=0.01)
-text3d("FacadeSignPChar", "PLS", 0.42, (-4.05, FF - 0.31, SZ - 0.15), M["white"], fs, extrude=0.02)   # biele PLS ako favicon
-text3d("FacadeSignText", "PLS GROUP", 0.92, (-3.35, FF - 0.24, SZ - 0.18), M["signGlow"], fs, extrude=0.04, align="LEFT")
-text3d("FacadeSignSub", "AUTOSERVIS  ·  BRATISLAVA", 0.24, (-3.33, FF - 0.24, SZ - 0.52), M["orangeGlow"], fs, extrude=0.015, align="LEFT")
+# firma nemá logo → iba názov, na stred tabule (bez oranžového štvorca)
+text3d("FacadeSignText", "PLS GROUP", 0.92, (0, FF - 0.24, SZ - 0.18), M["signGlow"], fs, extrude=0.04)
+text3d("FacadeSignSub", "AUTOSERVIS  ·  BRATISLAVA", 0.24, (0, FF - 0.24, SZ - 0.52), M["orangeGlow"], fs, extrude=0.015)
 # okná kancelárie a vchod
 for sx in (-1, 1):
     x = sx * 5.6

@@ -120,12 +120,18 @@ async function load3d() {
     window.__scene = api;
     loader.classList.add("done");
     poster.classList.add("off");
-    // úvod: z ulice cez vráta dnu; ovládacie prvky sa ukážu až na konci jazdy
+    // úvod: PC z ulice cez vráta dnu, mobil už v garáži (auto sa natočí do šikma); ovládacie prvky sa ukážu až na konci
     hud(false);
     api.playIntro(() => {
-      hint.textContent = touch ? "Ťuknite na bublinu · auto otočíte prstom" : "Kliknite na bublinu · auto otočíte myšou";
+      if (mobile) {                                   // mobil: výrazné okienko, zmizne pri prvom dotyku obrazovky
+        setHint(ICON_HAND, "Auto otočíte potiahnutím prsta");
+        hint.classList.add("touchtip");
+        const gone = () => hint.classList.add("gone");
+        addEventListener("pointerdown", gone, { once: true, capture: true });
+        addEventListener("touchstart", gone, { once: true, capture: true, passive: true });
+      } else setHint(ICON_ROTATE, touch ? "Ťuknite na bublinu · auto otočíte prstom" : "Kliknite na bublinu · auto otočíte myšou");
       hud(true);
-    });
+    }, { inside: mobile });
     document.addEventListener("car-rotated", () => hint.classList.add("faded"), { once: true });
     new IntersectionObserver(([e]) => (e.isIntersecting ? api.resume() : api.pause())).observe(wrap);
     return api;
@@ -145,23 +151,22 @@ function hud(on) {
   [hint, cta].forEach((el) => el?.classList.toggle("on", on));
 }
 
-hint.textContent = touch ? "Ťuknite na bublinu a uvidíte, čo robíme" : "Kliknite na bublinu a uvidíte, čo robíme";
+// nápoveda s ikonou (výrazná, aby si ju návštevník všimol)
+const svgI = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON_ROTATE = svgI('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>');
+const ICON_HAND = svgI('<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>');
+function setHint(icon, text) { hint.innerHTML = `${icon}<span></span>`; hint.querySelector("span").textContent = text; }
+setHint(ICON_ROTATE, touch ? "Ťuknite na bublinu a uvidíte, čo robíme" : "Kliknite na bublinu a uvidíte, čo robíme");
 const canWebgl = webgl();
 if (!canWebgl) {
   document.documentElement.classList.add("nowebgl");
   showStatic(); hud(true); loader.classList.add("done");
   go3d && (go3d.hidden = true);
 } else if (mobile) {
-  showStatic(); hud(true); loader.classList.add("done");   // mobil: obrázok so všetkými bublinami, 3D až na požiadanie
-  go3d?.addEventListener("click", start3d);
-  // potiahnutie prstom do strany po obrázku → hneď spustí 3D (netreba hľadať tlačidlo)
-  let sx = null, sy = 0;
-  wrap.addEventListener("pointerdown", (e) => { if (!started && !e.target.closest("button,a")) { sx = e.clientX; sy = e.clientY; } });
-  wrap.addEventListener("pointermove", (e) => {
-    if (sx === null || started) return;
-    if (Math.abs(e.clientX - sx) > 14 && Math.abs(e.clientX - sx) > Math.abs(e.clientY - sy)) { sx = null; start3d(); }
-  });
-  addEventListener("pointerup", () => (sx = null));
+  // mobil: kým sa načíta 3D, je vidno obrázok s bublinami; potom hneď krátky úvod v garáži (bez tlačidla „Zobraziť v 3D“)
+  showStatic(); hud(true); loader.classList.add("done");
+  go3d && (go3d.hidden = true);
+  start3d();
 } else {
   start3d();                                         // počítač: hneď úvodná jazda (kým sa načíta, je vidno fasádu)
 }

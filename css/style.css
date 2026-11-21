@@ -59,9 +59,14 @@ nav ul a:hover{background-size:100% 3px}
 .hero-intro .t{font-family:var(--head);font-weight:800;font-size:clamp(30px,3.2vw,46px);line-height:.95;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.85)}
 .hero-intro .sub{margin-top:6px;font-family:var(--head);font-weight:700;font-size:clamp(14px,1.2vw,17px);letter-spacing:.08em;text-transform:uppercase;text-shadow:0 2px 14px rgba(0,0,0,.8)}
 .hero-intro .sub em{font-style:normal;color:var(--o)}
-.hint{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:rgba(13,15,18,.8);border:1px solid rgba(255,255,255,.18);padding:8px 16px;font-family:var(--head);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:16px;opacity:0;transition:opacity .6s;white-space:nowrap}
-.hint.on{opacity:1}
-.hint.faded{opacity:.55}
+/* nápoveda: oranžová s ikonou a pulzovaním, kým návštevník auto neotočí */
+.hint{position:absolute;left:50%;top:84px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--o);color:var(--k);border:2px solid var(--w);border-radius:12px;padding:9px 18px 9px 14px;font-family:var(--head);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:17px;opacity:0;transition:opacity .6s;white-space:nowrap;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.hint svg{width:22px;height:22px;flex:none}
+.hint.on{opacity:1;animation:hintpulse 1.8s ease-out infinite}
+.hint.faded{opacity:.6;animation:none;background:rgba(13,15,18,.8);color:var(--w);border-color:rgba(255,255,255,.18)}
+.hint.gone{opacity:0!important;animation:none;transition:opacity .25s}
+@keyframes hintpulse{0%{box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 0 0 rgba(255,90,31,.75)}70%{box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 0 16px rgba(255,90,31,0)}100%{box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 0 0 rgba(255,90,31,0)}}
+@keyframes swipe{0%,100%{transform:translateX(-16px) rotate(-8deg)}50%{transform:translateX(16px) rotate(8deg)}}
 .cta-bar{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:12px;opacity:0;transition:opacity .4s;pointer-events:none}
 .cta-bar.on{opacity:1}
 .cta-bar.on .btn{pointer-events:auto}
@@ -358,6 +363,9 @@ dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
   .bubble.big,.bubble.big .dot{width:60px;height:60px}.bubble.big svg{width:30px;height:30px}
   .bubble svg{width:22px;height:22px}
   .hint{top:auto;bottom:calc(100px + env(safe-area-inset-bottom));font-size:13px;white-space:normal;width:max-content;max-width:calc(100% - 32px);text-align:center}
+  /* mobil: okienko nad autom, zmizne pri prvom dotyku */
+  html .hint.touchtip{bottom:auto;top:62%;flex-direction:column;gap:6px;padding:10px 18px;font-size:15px;border-radius:14px;max-width:min(220px,calc(100% - 32px))}
+  html .hint.touchtip svg{width:32px;height:32px;animation:swipe 1.4s ease-in-out infinite}
   .static .hint{bottom:calc(164px + env(safe-area-inset-bottom))}
   .cta-bar{display:none}
   .hero-intro{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -384,7 +392,7 @@ dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
 }
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .bubble .dot:before,.arrow,.loader b:after{animation:none}
+  .bubble .dot:before,.arrow,.loader b:after,.hint.on,html .hint.touchtip svg{animation:none}
   dialog[open]{animation:none}
 }
 .reduced .scene-wrap{height:100vh;height:100svh}

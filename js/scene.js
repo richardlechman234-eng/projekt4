@@ -58,7 +58,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
 
   // model (garáž + auto z Blendera, export GLB)
   const draco = new DRACOLoader().setDecoderPath("vendor/three/jsm/libs/draco/gltf/").setDecoderConfig({ type: "wasm" });
-  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync("models/garage.glb?v=17");
+  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync("models/garage.glb?v=18");
   draco.dispose();
   const root = gltf.scene;
   scene.add(root);
@@ -152,9 +152,20 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
   }
 
   // úvodná jazda (časová, nezávislá od FPS)
+  const INSIDE_MS = 2200;
   let intro = reduced ? null : { t0: Infinity, done: null };   // čaká na playIntro – dovtedy stojí kamera na ulici
   const P = new THREE.Vector3(), T = new THREE.Vector3();
   function pose(now) {
+    if (intro && intro.inside) {                      // mobil: úvod už v garáži – kamera sa jemne priblíži, auto sa natočí do šikma
+      const tt = intro.t0 === Infinity ? 0 : clamp((now - intro.t0) / INSIDE_MS), k = smooth(0, 1, tt);
+      T.fromArray(view.tgt); P.fromArray(view.pos);
+      P.lerp(T, -0.16 * (1 - k));                     // na začiatku o kúsok ďalej
+      camera.fov = view.vfov; camera.updateProjectionMatrix();
+      camera.position.copy(P); camera.lookAt(T); camera.updateMatrixWorld();
+      if (door) door.visible = false;
+      if (tt >= 1) { const d = intro.done; intro = null; d && d(); }
+      return { t: 0.82 + 0.18 * k, turn: k };          // turn 0 → auto spredu, 1 → šikmý uhol pohľadu "tall"
+    }
     let t = intro ? clamp((now - intro.t0) / INTRO_MS) : 1;
     if (reduced) t = 1;
     const keys = [...INTRO, { t: 1, pos: view.pos, tgt: view.tgt, fovAbs: view.vfov }];
@@ -348,7 +359,8 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
       zoom = { t0: performance.now() - (1 - zk) * 700, dur: 700, dir: -1, done: null };
       kick();
     },
-    playIntro: (done) => { if (reduced) { done && done(); kick(); return; } intro = { t0: performance.now(), done }; kick(); },
+    // inside = mobil: bez jazdy cez vráta, iba natočenie auta v garáži
+    playIntro: (done, { inside = false } = {}) => { if (reduced) { done && done(); kick(); return; } intro = { t0: performance.now(), done, inside }; kick(); },
     pause: () => { running = false; },
     resume: () => { running = true; kick(); },
     kick,

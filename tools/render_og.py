@@ -1,6 +1,6 @@
 # Obrázok na zdieľanie (assets/og-image.jpg, 1200×630) a ikona pre iPhone (assets/apple-touch-icon.png, 180×180)
 # Spustenie: blender -b --factory-startup --python tools/render_og.py [-- --icon-only | --reuse-bg]
-# 1) render garáže s autom vpravo, 2) poskladanie textov v ortografickej scéne (Cycles, emisné materiály).
+# 1) render garáže s autom presne z uhla, kde sa zastaví úvodná jazda (pohľad "wide"), 2) poskladanie textov v ortografickej scéne (Cycles, emisné materiály).
 import bpy, math, os, re, json, sys, tempfile
 from mathutils import Vector as V
 
@@ -34,8 +34,7 @@ if not icon_only and not ("--reuse-bg" in sys.argv and os.path.exists(TMP)):
     loc, tgt = b3(v["pos"]), b3(v["tgt"])
     bpy.ops.object.camera_add(location=loc); cam = bpy.context.object
     cam.rotation_euler = (tgt - loc).to_track_quat("-Z", "Y").to_euler()
-    cam.data.sensor_fit = "HORIZONTAL"; cam.data.angle = math.radians(74); cam.data.clip_start = 0.15
-    cam.data.shift_x = -0.17                      # auto do pravej časti, vľavo miesto na text
+    cam.data.sensor_fit = "HORIZONTAL"; cam.data.angle = math.radians(v["hfov"]); cam.data.clip_start = 0.15   # rovnaký záber ako 3D
     sc.camera = cam
     sc.render.resolution_x, sc.render.resolution_y, sc.render.resolution_percentage = 1200, 630, 100
     sc.render.image_settings.file_format = "PNG"; sc.render.filepath = TMP
@@ -100,22 +99,18 @@ if not icon_only:
     camera(W, H)
     sc.render.resolution_x, sc.render.resolution_y = 1200, 630
     rect("bg", -W / 2, -H / 2, W, H, 0, emis("bg", image=TMP))
-    rect("shade", -W / 2, -H / 2, W, H, 0.02, emis("shade", DARK, ramp=[(0.0, 0.93), (0.40, 0.84), (0.66, 0.0)]))
+    # auto ostáva v strede bez zakrytia; texty iba v ľavom hornom a ľavom dolnom rohu (firma nemá logo → bez štvorca)
+    rect("shade", -W / 2, -H / 2, W, H, 0.02, emis("shade", DARK, ramp=[(0.0, 0.8), (0.26, 0.45), (0.42, 0.0)]))
     ramp_axis[0] = "Y"
-    rect("shadeB", -W / 2, -H / 2, W, H, 0.03, emis("shadeB", DARK, ramp=[(0.0, 0.7), (0.22, 0.0)]))
-    L = -5.35
-    # logo: oranžový štvorec s bielym PLS
-    rect("logo", L, 1.75, 0.98, 0.98, 0.05, emis("o", ORANGE))
-    text("PLS", F_BLACK, 0.36, L + 0.49, 2.24, align="CENTER", valign="CENTER")
-    text("AUTOSLUŽBY PLN", F_TEXT, 0.25, L + 1.22, 2.10, color=(0.78, 0.78, 0.78), spacing=1.18)
-    # nadpis
-    text("PLS GROUP", F_HEAD, 1.55, L - 0.05, 0.08)
-    rect("bar", L, -0.32, 1.2, 0.1, 0.05, emis("o2", ORANGE))
-    text("AUTOSERVIS · BRATISLAVA – VRAKUŇA", F_HEAD, 0.36, L, -0.95, color=ORANGE, spacing=1.08)
-    text("Servis · Pneuservis · Diagnostika · STK · Odťah", F_TEXT, 0.3, L, -1.5, color=(0.92, 0.92, 0.92))
+    rect("shadeT", -W / 2, -H / 2, W, H, 0.03, emis("shadeT", DARK, ramp=[(0.62, 0.0), (1.0, 0.75)]))
+    rect("shadeB", -W / 2, -H / 2, W, H, 0.04, emis("shadeB", DARK, ramp=[(0.0, 0.7), (0.2, 0.0)]))
+    L = -5.5
+    text("PLS GROUP", F_HEAD, 0.95, L - 0.03, 2.2)
+    rect("bar", L, 1.9, 1.0, 0.08, 0.05, emis("o2", ORANGE))
+    text("AUTOSERVIS · BRATISLAVA – VRAKUŇA", F_HEAD, 0.3, L, 1.42, color=ORANGE, spacing=1.08)
     # tlačidlo s telefónom
-    rect("btn", L, -2.62, 3.25, 0.74, 0.05, emis("o3", ORANGE))
-    text("Tel. 0902 121 221", F_HEAD, 0.4, L + 1.625, -2.25, color=DARK, align="CENTER", valign="CENTER", spacing=1.04)
+    rect("btn", L, -2.85, 3.0, 0.66, 0.05, emis("o3", ORANGE))
+    text("Tel. 0902 121 221", F_HEAD, 0.38, L + 1.5, -2.52, color=DARK, align="CENTER", valign="CENTER", spacing=1.04)
     sc.render.image_settings.file_format = "JPEG"; sc.render.image_settings.quality = 86
     sc.render.filepath = os.path.join(ROOT, "assets", "og-image.jpg")
     bpy.ops.render.render(write_still=True)

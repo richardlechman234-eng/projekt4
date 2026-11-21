@@ -23,7 +23,7 @@ Statická stránka – iba HTML/CSS/JS, **bez servera a bez build kroku**. Súbo
 | `cookies.html`, `zasady-ochrany-osobnych-udajov.html`, `informacie-pre-spotrebitela.html` | Právne stránky (`js/legal.js` doplní údaje o firme) |
 | `js/config.js` | **Jediné miesto s údajmi o firme** (`window.PLS`): telefón, adresa, IČO…, cenník, Google hodnotenie, `bookingEndpoint`. Prázdne hodnoty sa na webe zobrazia ako žlté „doplniť“. |
 | `js/services.js` | Zoznam 8 služieb (texty, ikony, smer bubliny `normal`, krátky mobilný názov `mob`, vzdialenosť priblíženia `zoom`) |
-| `js/main.js` | Štart: statický obrázok s bublinami, spustenie 3D (desktop hneď, mobil po ťuknutí / potiahnutí) |
+| `js/main.js` | Štart: statický obrázok s bublinami, kým sa načíta 3D; potom úvod (PC z ulice cez vráta, mobil ≤760px už v garáži – auto sa natočí do šikma + okienko „Auto otočíte potiahnutím prsta“, zmizne pri prvom dotyku). Nápoveda `.hint` s ikonou (`setHint`). |
 | `js/scene.js` | 3D scéna (three.js z `vendor/three/`): úvodná jazda cez vráta, otáčanie auta, bubliny, priblíženie na službu (`focus`/`unfocus`) |
 | `js/views.js` | Pohľady kamery `wide` (PC) / `tall` (mobil) a úvodná jazda. `odtah` = bod bubliny Odťah, `sign` = tabuľa ODŤAH pri pravej stene (musí sedieť s `TOW_LOC`/`TOW_YAW` v `tools/build_scene.py`); detail Odťahu má panel vľavo. JSON medzi `/*JSON*/…/*END*/` číta aj `tools/render_poster.py`. |
 | `js/callouts.js` | Mobil: popisky bublín s čiarami nad/pod autom |
