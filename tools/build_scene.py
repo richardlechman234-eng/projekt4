@@ -403,7 +403,7 @@ box("SignBoard", (3.2, 0.05, 0.75), (-1.15, SY, 2.45), M["beam"], sg, bevel=0.01
 box("SignGlow", (3.3, 0.02, 0.03), (-1.15, SY - 0.03, 2.06), M["orangeGlow"], sg)
 # firma nemá logo → iba názov, na stred tabule (bez oranžového štvorca)
 text3d("SignText", "PLS GROUP", 0.46, (-1.15, SY - 0.06, 2.42), M["white"], sg, extrude=0.02)
-text3d("SignSub", "AUTOSERVIS", 0.13, (-1.15, SY - 0.06, 2.20), M["orange"], sg, extrude=0.01)
+text3d("SignSub", "AUTOSERVIS", 0.18, (-1.15, SY - 0.06, 2.17), M["orangeGlow"], sg, extrude=0.01)   # väčšie a svietiace – čitateľné z diaľky
 
 # ---- vráta (pivot hore – JS ich "zroluje" nahor)
 DW = OW - 0.03
@@ -846,7 +846,7 @@ for i, x in enumerate((-0.6, -0.29)):
     cyl(f"TowWheel{i}", 0.048, 0.02, (x, FY_T, -0.115), M["orangeGlow"], tw, axis="Y", verts=20)
     cyl(f"TowHub{i}", 0.018, 0.02, (x, FY_T - 0.006, -0.115), M["beam"], tw, axis="Y", verts=12)
 text3d("TowText", "ODŤAH", 0.22, (0.27, -0.05, -0.03), M["white"], tw, extrude=0.015)
-text3d("TowSub", "ZAVOLAJTE NÁM", 0.075, (0.27, -0.05, -0.19), M["orange"], tw, extrude=0.008)
+text3d("TowSub", "ZAVOLAJTE NÁM", 0.105, (0.27, -0.05, -0.215), M["orangeGlow"], tw, extrude=0.008)   # väčšie a svietiace – čitateľné z diaľky
 for i, x in enumerate((-0.6, 0.6)):                   # reťaze do stropu
     cyl(f"TowChain{i}", 0.006, 0.69, (x, 0, 0.655), M["chrome"], tw, verts=6)
 tw.location = TOW_LOC; tw.rotation_euler = (0, 0, TOW_YAW)

@@ -58,7 +58,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
 
   // model (garáž + auto z Blendera, export GLB)
   const draco = new DRACOLoader().setDecoderPath("vendor/three/jsm/libs/draco/gltf/").setDecoderConfig({ type: "wasm" });
-  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync("models/garage.glb?v=18");
+  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync("models/garage.glb?v=19");
   draco.dispose();
   const root = gltf.scene;
   scene.add(root);
