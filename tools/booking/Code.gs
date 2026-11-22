@@ -106,14 +106,33 @@ function doPost(e) {
 
     const owner = NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
     MailApp.sendEmail({ to: owner, replyTo: f.mail, name: BRAND + " – web", subject: "Nová objednávka: " + f.svc + " – " + when, body: details + "\n\nOdpoveďou na tento e-mail napíšete priamo zákazníkovi." });
+    const title = BRAND + " – " + f.svc, note = "Termín je záväzný až po potvrdení servisom. Tel. " + PHONE;
+    const gcal = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(title) +
+      "&dates=" + utc_(start) + "/" + utc_(end) + "&location=" + encodeURIComponent(ADDRESS) + "&details=" + encodeURIComponent(note);
     MailApp.sendEmail({ to: f.mail, replyTo: owner, name: BRAND, subject: "Prijali sme vašu objednávku – " + when,
       body: "Dobrý deň,\n\nďakujeme, vašu objednávku sme prijali:\n\n" + details.split("\n\nObjednané")[0] +
-        "\n\nTermín je záväzný až po našom potvrdení – ozveme sa vám telefonicky alebo e-mailom.\nAk potrebujete termín zmeniť alebo zrušiť, odpovedzte na tento e-mail alebo zavolajte na " + PHONE + ".\n\n" + BRAND + "\n" + ADDRESS });
+        "\n\nTermín je záväzný až po našom potvrdení – ozveme sa vám telefonicky alebo e-mailom.\nAk potrebujete termín zmeniť alebo zrušiť, odpovedzte na tento e-mail alebo zavolajte na " + PHONE + "." +
+        "\n\nPridať do kalendára v mobile: otvorte prílohu „termin.ics“ (iPhone, Android, Outlook)\nalebo do Google Kalendára: " + gcal +
+        "\n\n" + BRAND + "\n" + ADDRESS,
+      attachments: [Utilities.newBlob(ics_(title, start, end, note), "text/calendar", "termin.ics")] });
 
     cache.put("u" + who, "1", 60);
     cache.put(dayKey, String(n + 1), 21600);
     return json_({ ok: true });
   } finally { lock.releaseLock(); }
+}
+
+// čas v UTC (20261124T070000Z) – funguje v každom kalendári bez nastavenia časového pásma
+const utc_ = (d) => Utilities.formatDate(d, "UTC", "yyyyMMdd'T'HHmmss'Z'");
+// pozvánka .ics (iPhone, Android, Outlook ju otvoria a pridajú do kalendára); pripomienka 1 deň a 1 hodinu vopred
+function ics_(title, start, end, note) {
+  const e = (t) => String(t).replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//" + BRAND + "//objednavka//SK", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    "UID:" + Utilities.getUuid() + "@plsgroup", "DTSTAMP:" + utc_(new Date()), "DTSTART:" + utc_(start), "DTEND:" + utc_(end),
+    "SUMMARY:" + e(title), "LOCATION:" + e(ADDRESS), "DESCRIPTION:" + e(note),
+    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", "DESCRIPTION:" + e(title), "END:VALARM",
+    "BEGIN:VALARM", "TRIGGER:-PT1H", "ACTION:DISPLAY", "DESCRIPTION:" + e(title), "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR"].join("\r\n");
 }
 
 // Spustite raz ručne (tlačidlo ▶ Spustiť) – vytvorí kalendár a vypýta povolenia od Google.
