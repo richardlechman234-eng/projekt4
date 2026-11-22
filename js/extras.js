@@ -48,31 +48,9 @@ function reviews() {
       </div>
       <div class="gacts">
         <a class="btn o" href="${esc(g.mapsUrl)}" target="_blank" rel="noopener noreferrer">Prečítať recenzie na Google</a>
-        <a class="btn line" href="${esc(g.placeId ? "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(g.placeId) : g.mapsUrl)}" target="_blank" rel="noopener noreferrer">Napísať recenziu</a>
+        <a class="btn line" href="${esc(g.mapsUrl)}" target="_blank" rel="noopener noreferrer">Napísať recenziu</a>
       </div>
-    </div>
-    <div class="rlist" id="rlist"></div>`;
-  if (!(g.placeId && g.apiKey)) return;
-  // živé recenzie až po súhlase (prenos IP adresy do Google)
-  const list = $("#rlist");
-  const load = () => {
-    list.innerHTML = '<p class="rload">Načítavam recenzie z Google…</p>';
-    fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(g.placeId)}?languageCode=sk`, {
-      headers: { "X-Goog-Api-Key": g.apiKey, "X-Goog-FieldMask": "rating,userRatingCount,reviews" },
-      referrerPolicy: "strict-origin-when-cross-origin",
-    }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((d) => {
-      const rv = (d.reviews || []).filter((x) => x.text?.text).slice(0, 4);
-      list.innerHTML = rv.map((x) => `
-        <figure class="rcard">
-          <div class="rhead"><span class="stars sm">${stars(x.rating || 0)}</span><small>${esc(x.relativePublishTimeDescription || "")}</small></div>
-          <blockquote>${esc(x.text.text.length > 320 ? x.text.text.slice(0, 317) + "…" : x.text.text)}</blockquote>
-          <figcaption>${esc(x.authorAttribution?.displayName || "Zákazník")} · <span>recenzia z Google</span></figcaption>
-        </figure>`).join("") + '<p class="rsrc">Zdroj: Google Maps. Recenzie sa načítavajú priamo z Google a nie sú upravované.</p>';
-    }).catch(() => { list.innerHTML = ""; });
-  };
-  if (store.get("pls-google") === "1") return load();
-  list.innerHTML = `<div class="rgate"><p>Texty recenzií načítame priamo z Google. Pri načítaní sa pripojíte k serverom Google (viac v <a href="cookies.html">zásadách cookies</a>).</p><button class="btn line" type="button" id="rg-ok">Zobraziť recenzie</button></div>`;
-  $("#rg-ok").addEventListener("click", () => { store.set("pls-google", "1"); load(); });
+    </div>`;
 }
 
 /* ---------- sezónny oznam (prezúvanie) ---------- */

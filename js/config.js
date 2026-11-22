@@ -31,10 +31,7 @@ window.PLS = {
     rating: 4.9,
     count: 34,
     checked: "19. 11. 2026",
-    mapsUrl: "https://www.google.com/maps?cid=735985324959160307",
-    // Živé recenzie cez Google Places API (New). Kľúč obmedzte v Google Cloud na doménu webu.
-    placeId: "",      // napr. "ChIJ..." (Place ID Finder od Google)
-    apiKey: ""
+    mapsUrl: "https://www.google.com/maps?cid=735985324959160307"
   },
 
   // Štatistika návštevnosti bez cookies (Plausible). Prázdne = vypnuté.
