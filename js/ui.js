@@ -57,8 +57,6 @@ const DAYS = ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "
 const fmtDate = (s) => { const [y, m, d] = s.split("-").map(Number); const dt = new Date(y, m - 1, d); return `${DAYS[dt.getDay()]} ${d}. ${m}. ${y}`; };
 
 function bookingForm(selected) {
-  const min = iso(nextWorkday());
-  const max = new Date(); max.setDate(max.getDate() + 120);
   return `
   <button class="x" type="button" data-close aria-label="Zavrieť">×</button>
   <form class="book" id="book-form" novalidate>
@@ -71,11 +69,11 @@ function bookingForm(selected) {
           ${SERVICES.map((s) => `<option value="${s.id}" ${s.id === selected ? "selected" : ""}>${esc(s.title)}</option>`).join("")}
           <option value="ine" ${selected === "ine" ? "selected" : ""}>Iné / neviem presne</option>
         </select></div>
-      <div class="f"><label for="f-date">Dátum (Po – Pi)</label>
-        <input id="f-date" name="date" type="date" min="${min}" max="${iso(max)}" value="${min}" required>
-        <span class="err" id="e-date">Vyberte pracovný deň (pondelok až piatok).</span></div>
-      <div class="f"><span class="lbl" id="slot-lab">Čas</span>
-        <div class="slots" role="radiogroup" aria-labelledby="slot-lab" id="slots"></div>
+      <div class="f full"><span class="lbl" id="day-lab"><i class="stepn">1</i>Vyberte deň</span>
+        <div class="days" role="radiogroup" aria-labelledby="day-lab" id="days"></div>
+        <span class="err" id="e-date">Vyberte deň, kedy prídete.</span></div>
+      <div class="f full slotbox" id="slotbox"><span class="lbl" id="slot-lab"><i class="stepn">2</i>Vyberte čas<b id="slot-day"></b></span>
+        <div class="slots" role="radiogroup" aria-labelledby="slot-lab" id="slots"><p class="slot-hint">Najprv vyberte deň – potom sa tu ukážu voľné časy.</p></div>
         <span class="err" id="e-slot">Vyberte čas.</span></div>
       <div class="f"><label for="f-name">Meno a priezvisko</label><input id="f-name" name="name" autocomplete="name" required><span class="err">Zadajte meno.</span></div>
       <div class="f"><label for="f-tel">Telefón</label><input id="f-tel" name="tel" type="tel" autocomplete="tel" placeholder="0902 123 456" required><span class="err">Zadajte platné telefónne číslo.</span></div>
@@ -88,6 +86,7 @@ function bookingForm(selected) {
         <span>Beriem na vedomie, že moje osobné údaje použijete na vybavenie objednávky podľa <a href="zasady-ochrany-osobnych-udajov.html" target="_blank" rel="noopener">Zásad ochrany osobných údajov</a>.</span></label>
         <span class="err" id="e-ok">Na odoslanie je potrebné potvrdiť, že ste sa so zásadami oboznámili.</span></div>
     </div>
+    <p class="formerr" id="f-err" role="alert" hidden></p>
     <div class="row" style="margin-top:22px">
       <button class="btn o" type="submit">Odoslať objednávku</button>
       <button class="btn line" type="button" data-close>Zrušiť</button>
@@ -98,14 +97,31 @@ function bookingForm(selected) {
   </form>`;
 }
 
+// dni: najbližších 30 pracovných dní (víkendy sa preskočia), plne obsadený deň sa nedá vybrať
+const DAY_COUNT = 30;
+const SH = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
+function workdays() {
+  const out = [], d = nextWorkday();
+  while (out.length < DAY_COUNT) { if (d.getDay() !== 0 && d.getDay() !== 6) out.push(new Date(d)); d.setDate(d.getDate() + 1); }
+  return out;
+}
+function renderDays(form) {
+  const wrap = $("#days", form), prev = form.querySelector('input[name="date"]:checked')?.value;
+  wrap.innerHTML = workdays().map((d) => {
+    const v = iso(d), full = (busy[v] || []).length >= HOURS.length;
+    return `<label${full ? ' title="Plne obsadené"' : ""}><input type="radio" name="date" value="${v}" ${full ? "disabled" : ""} ${v === prev && !full ? "checked" : ""}><span><small>${SH[d.getDay()]}</small><b>${d.getDate()}. ${d.getMonth() + 1}.</b>${full ? "<em>plné</em>" : ""}</span></label>`;
+  }).join("");
+}
 function refreshSlots(form) {
-  const wrap = $("#slots", form), date = $("#f-date", form).value;
-  const d = date ? new Date(date + "T00:00:00") : null;
-  const ok = d && d.getDay() !== 0 && d.getDay() !== 6;
+  const wrap = $("#slots", form), date = form.querySelector('input[name="date"]:checked')?.value;
+  $("#slotbox", form).classList.toggle("on", !!date);
+  $("#slot-day", form).textContent = date ? " – " + fmtDate(date) : "";
+  if (!date) return;
   const prev = form.querySelector('input[name="slot"]:checked')?.value;
   const taken = busy[date] || [];
-  wrap.innerHTML = HOURS.map((h) => { const t = taken.includes(h); return `<label${t ? ' title="Obsadené"' : ""}><input type="radio" name="slot" value="${h}" ${ok && !t ? "" : "disabled"} ${String(h) === prev && !t ? "checked" : ""}><span>${h}:00${t ? '<i class="sr"> – obsadené</i>' : ""}</span></label>`; }).join("");
+  wrap.innerHTML = HOURS.map((h) => { const t = taken.includes(h); return `<label${t ? ' title="Obsadené"' : ""}><input type="radio" name="slot" value="${h}" ${t ? "disabled" : ""} ${String(h) === prev && !t ? "checked" : ""}><span>${h}:00${t ? "<em>obsadené</em>" : ""}</span></label>`; }).join("");
 }
+function refreshWhen(form) { renderDays(form); refreshSlots(form); }
 
 // lišta so súhlasom pri prvej návšteve: „Prijať všetko“ = povoliť mapu Google, „Iba nevyhnutné“ = nič od tretích strán
 function consentBar(loadMap) {
@@ -133,9 +149,15 @@ export function openBooking(serviceId = "servis") {
   bkDlg.innerHTML = bookingForm(serviceId);
   bkDlg.setAttribute("aria-labelledby", "book-title");
   const form = $("#book-form", bkDlg);
-  refreshSlots(form);
-  loadBusy().then(() => { if (form.isConnected) refreshSlots(form); });
-  $("#f-date", form).addEventListener("change", () => { refreshSlots(form); $("#f-date", form).closest(".f").classList.remove("bad"); });
+  refreshWhen(form);
+  loadBusy().then(() => { if (form.isConnected) refreshWhen(form); });
+  $("#days", form).addEventListener("change", () => { refreshSlots(form); });
+  // chyba zmizne hneď, ako ju návštevník opraví
+  const fix = (e) => {
+    const f = e.target.closest(".f");
+    if (f?.classList.contains("bad")) { f.classList.remove("bad"); summary(form); }
+  };
+  form.addEventListener("input", fix); form.addEventListener("change", fix);
   form.addEventListener("submit", (e) => { e.preventDefault(); submit(form); });
   if (!bkDlg.open) bkDlg.showModal();
 }
@@ -145,16 +167,23 @@ function submit(form) {
   if (v("web")) return;                                   // honeypot
   let bad = false;
   const mark = (el, cond) => { const f = el.closest(".f"); f.classList.toggle("bad", !cond); if (!cond) bad = true; return cond; };
-  const d = v("date") ? new Date(v("date") + "T00:00:00") : null;
-  mark(form.elements.namedItem("date"), !!d && d.getDay() !== 0 && d.getDay() !== 6 && d >= new Date(new Date().setHours(0, 0, 0, 0)));
+  const day = form.querySelector('input[name="date"]:checked');
+  mark($("#days", form), !!day);
   const slot = form.querySelector('input[name="slot"]:checked');
-  mark($("#slots", form), !!slot);
+  mark($("#slots", form), !day || !!slot);              // bez dňa stačí chyba pri dni
   mark(form.elements.namedItem("name"), v("name").length > 2);
   mark(form.elements.namedItem("tel"), /^[+]?[0-9 ()/-]{9,18}$/.test(v("tel")));
   mark(form.elements.namedItem("mail"), /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("mail")));
   mark(form.elements.namedItem("car"), v("car").length > 1);
   mark($("#f-ok", form), $("#f-ok", form).checked);
-  if (bad) { form.querySelector(".bad input, .bad select")?.focus(); return; }
+  if (bad) {
+    summary(form);
+    const first = form.querySelector(".f.bad");
+    first.scrollIntoView({ behavior: "smooth", block: "center" });
+    first.querySelector("input:not(:disabled), select")?.focus({ preventScroll: true });
+    return;
+  }
+  summary(form);
 
   const svc = byId(v("svc"))?.title || "Iné / neviem presne";
   const t = `${slot.value}:00`;
@@ -197,7 +226,7 @@ function sendGas(form, o, btn, data) {
       if (res.error === "taken") {
         reset();
         return loadBusy(true).then(() => {
-          refreshSlots(form);
+          refreshWhen(form);
           const f = $("#slots", form).closest(".f");
           $("#e-slot", form).textContent = "Tento čas si medzitým niekto rezervoval. Vyberte iný.";
           f.classList.add("bad"); $("#slots input:not(:disabled)", form)?.focus();
@@ -206,6 +235,15 @@ function sendGas(form, o, btn, data) {
       throw new Error(res.error || "chyba");
     })
     .catch(() => showDone(o, true));
+}
+
+// súhrn nad tlačidlom: čo ešte chýba
+const NAMES = { days: "deň", slots: "čas", "f-name": "meno", "f-tel": "telefón", "f-mail": "e-mail", "f-car": "auto", "f-ok": "potvrdenie zásad" };
+function summary(form) {
+  const box = $("#f-err", form);
+  const miss = [...form.querySelectorAll(".f.bad")].map((f) => NAMES[f.querySelector("[id]")?.id] || NAMES[[...f.querySelectorAll("[id]")].map((x) => x.id).find((id) => NAMES[id])]).filter(Boolean);
+  box.hidden = !miss.length;
+  box.textContent = miss.length ? "Ešte doplňte: " + miss.join(", ") + "." : "";
 }
 
 function showSent(o, again) {

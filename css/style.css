@@ -282,7 +282,7 @@ dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
 .book h3{font-size:44px;margin:10px 0 6px}
 .book .lead{margin-bottom:20px;font-size:17px}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
-.f{display:flex;flex-direction:column;gap:5px}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
 .f.full{grid-column:1/-1}
 .f .lbl{display:block}
 .f label,.f .lbl{font-family:var(--head);font-weight:700;font-size:16px;letter-spacing:.1em;text-transform:uppercase}
@@ -295,13 +295,34 @@ dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
 .hp{position:absolute!important;left:-9999px}
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:15px}
 .consent input{width:22px;height:22px;margin-top:3px;flex:none;accent-color:var(--o)}
+.stepn{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:8px;border-radius:50%;background:var(--o);color:var(--k);font-style:normal;font-size:14px;letter-spacing:0;vertical-align:1px}
+#slot-day{font-family:var(--body);font-weight:600;letter-spacing:0;text-transform:none}
+.days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.days label{position:relative;flex:none;scroll-snap-align:start;font-family:var(--body);letter-spacing:0;text-transform:none;text-align:center}
+.days input{position:absolute;opacity:0;width:1px;height:1px}
+.days span{display:flex;flex-direction:column;align-items:center;justify-content:center;width:66px;height:66px;border:2px solid var(--k);cursor:pointer;line-height:1.15}
+.days small{font-size:13px;font-weight:700;text-transform:uppercase;opacity:.7}
+.days b{font-size:17px}
+.days em,.slots em{display:block;font-style:normal;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.days input:checked+span{background:var(--k);color:var(--w)}
+.days input:checked+span small{opacity:1;color:var(--o)}
+.days input:focus-visible+span{outline:3px solid var(--o)}
+.days input:disabled+span{background:#eee;color:#777;border-color:#bbb;cursor:not-allowed}
+.days label:hover input:not(:disabled):not(:checked)+span,.slots label:hover input:not(:disabled):not(:checked)+span{background:#ffe7dc}
+.slotbox .slots{opacity:.45}
+.slotbox.on .slots{opacity:1}
+.slot-hint{grid-column:1/-1;font-size:15px;padding:12px;border:2px dashed #bbb;text-align:center}
+.f.bad .days span,.f.bad .slots span{border-color:#b00020}
+.f.bad .lbl{color:#b00020}
+.f.bad .err{font-weight:600}
+.formerr{margin-top:18px;padding:12px 14px;border:2px solid #b00020;background:#fdecee;color:#b00020;font-weight:600}
 .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.slots label{font-family:var(--body);font-weight:600;letter-spacing:0;text-transform:none;font-size:16px;text-align:center}
+.slots label{position:relative;font-family:var(--body);font-weight:600;letter-spacing:0;text-transform:none;font-size:16px;text-align:center}
 .slots input{position:absolute;opacity:0;width:1px;height:1px}
 .slots span{display:block;border:2px solid var(--k);padding:9px 0;cursor:pointer}
 .slots input:checked+span{background:var(--k);color:var(--w)}
 .slots input:focus-visible+span{outline:3px solid var(--o)}
-.slots input:disabled+span{opacity:.35;cursor:not-allowed;text-decoration:line-through}
+.slots input:disabled+span{background:#eee;color:#777;border-color:#bbb;cursor:not-allowed;padding:4px 0}
 .done{padding:34px}
 .done h3{font-size:42px;margin:10px 0}
 .done pre{white-space:pre-wrap;font-family:var(--body);background:#f3f3f3;border:2px solid var(--k);padding:14px;margin:14px 0;font-size:16px}
