@@ -1,6 +1,6 @@
 /* PLS GROUP – projekt4 */
 :root{
-  --w:#fff; --hl:#d4d8de; --o:#ff5a1f; --o-d:#c43600; --k:#121212; --g:#1b1e23; --line:rgba(18,18,18,.14);
+  --w:#fff; --hl:#d4d8de; --o:#ff5a1f; --o-d:#c43600; --k:#121212; --g:#1b1e23; --line:rgba(18,18,18,.14); --gr:#c9ced5;
   --head:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
@@ -104,17 +104,19 @@ nav ul a:hover{background-size:100% 3px}
 
 /* ---------- services list ---------- */
 section.sec{padding:96px 0}
-.services{background:var(--o);border-block:2px solid var(--k)}
+.services{background:var(--gr);border-block:2px solid var(--k)}
 .services .head{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:48px}
 .services .head p{font-size:21px;max-width:480px;justify-self:end}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;list-style:none}
 .card{display:flex;flex-direction:column;gap:10px;width:100%;height:100%;text-align:left;background:var(--w);border:2px solid var(--k);box-shadow:7px 7px 0 var(--k);padding:22px 20px;cursor:pointer;transition:transform .18s,box-shadow .18s}
-.card:hover{transform:translate(-4px,-4px);box-shadow:11px 11px 0 var(--k)}
+.card:hover{transform:translate(-4px,-4px);box-shadow:11px 11px 0 var(--o)}
 .card .ic{width:46px;height:46px;display:grid;place-items:center;background:var(--k);color:var(--o)}
 .card .ic svg{width:26px;height:26px}
 .card h3{font-size:27px}
 .card p{font-size:16px;line-height:1.45}
-.card .more{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font-family:var(--head);font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase}
+.card .more{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font-family:var(--head);font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:var(--k)}
+.card .more:after{content:"";display:block;width:34px;height:3px;margin-top:8px;background:var(--o);transition:width .18s}
+.card:hover .more:after{width:70px}
 
 /* ---------- process / why ---------- */
 .steps{display:grid;grid-template-columns:repeat(4,1fr);margin-top:52px;border-top:2px solid var(--k)}
@@ -212,7 +214,7 @@ section.sec{padding:96px 0}
 .mbar{display:none}
 
 /* ---------- contact ---------- */
-.contact{background:var(--o);border-top:2px solid var(--k)}
+.contact{background:var(--gr);border-top:2px solid var(--k)}
 .contact .grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;margin-top:44px}
 .info{background:var(--w);border:2px solid var(--k);box-shadow:8px 8px 0 var(--k);align-self:start}
 .info .row{padding:16px 24px;border-bottom:2px solid var(--k)}
