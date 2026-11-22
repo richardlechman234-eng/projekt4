@@ -11,6 +11,7 @@
 <p>Tento web <b>nepoužíva žiadne analytické, reklamné ani sledovacie cookies</b>. Fonty aj 3D prvky načítavame z vlastného servera, takže pri samotnom prezeraní nie sú vaše údaje posielané tretím stranám.</p>
 <table><tr><th>Názov</th><th>Účel</th><th>Typ</th><th>Platnosť</th></tr>
 <tr><td><code>pls-map</code> (localStorage)</td><td>Zapamätá si, že ste súhlasili so zobrazením mapy Google</td><td>funkčné, vami vyvolané</td><td>kým ho nevymažete</td></tr>
+<tr><td><code>pls-consent</code> (localStorage)</td><td>Zapamätá si vašu voľbu v lište o cookies („Iba nevyhnutné“ alebo „Prijať všetko“), aby sa lišta neukazovala znova</td><td>nevyhnutné</td><td>kým ho nevymažete</td></tr>
 <tr><td><code>pls-season</code> (localStorage)</td><td>Zapamätá si, že ste zavreli sezónny oznam</td><td>funkčné</td><td>kým ho nevymažete</td></tr>
 <tr><td><code>pls-sent</code> (sessionStorage)</td><td>Zabráni dvojitému odoslaniu objednávky</td><td>funkčné</td><td>do zatvorenia karty</td></tr></table>
 <h2>Recenzie z Google</h2>
@@ -20,8 +21,8 @@
 <h2>Mapa Google</h2>
 <p>Mapa sa načíta až po kliknutí na „Zobraziť mapu“. Vtedy sa váš prehliadač pripojí k serverom spoločnosti Google a Google môže ukladať vlastné cookies a spracúvať vašu IP adresu. Ak nechcete, mapu nezobrazujte. Môžete použiť odkaz „Navigovať v Mapách“, ktorý sa otvorí v samostatnej karte. Súhlas môžete kedykoľvek zrušiť tlačidlom nižšie.</p>
 <h2>Správa cookies</h2>
-<p>Súhlas so zobrazením mapy Google zrušíte týmto tlačidlom. Mapa sa potom znova zobrazí až po vašom kliknutí.</p>
-<p><button type="button" id="consent-reset" class="creset">Zrušiť súhlas so zobrazením mapy</button> <span id="consent-msg" role="status"></span></p>
+<p>Pri prvej návšteve sa zobrazí lišta s voľbou <b>„Iba nevyhnutné“</b> (nič od tretích strán) alebo <b>„Prijať všetko“</b> (povolí mapu Google). Svoju voľbu zrušíte týmto tlačidlom – mapa sa potom znova zobrazí až po vašom súhlase a lišta sa ukáže pri ďalšej návšteve.</p>
+<p><button type="button" id="consent-reset" class="creset">Zrušiť súhlas a zmeniť voľbu</button> <span id="consent-msg" role="status"></span></p>
 <p>Cookies, ktoré si uložil Google pri zobrazení mapy, a celé úložisko stránky môžete vymazať aj v nastaveniach prehliadača.</p>
 </main>
 <footer><div class="wrap"><div class="col"><b data-co="name"></b><span data-co="address"></span></div>

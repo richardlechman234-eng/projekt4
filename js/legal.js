@@ -6,6 +6,6 @@ var y = document.getElementById("y"); if (y) y.textContent = new Date().getFullY
 
 var rb = document.getElementById("consent-reset");
 if (rb) rb.addEventListener("click", function () {
-  try { localStorage.removeItem("pls-map"); localStorage.removeItem("pls-google"); } catch (e) {}
+  try { localStorage.removeItem("pls-map"); localStorage.removeItem("pls-google"); localStorage.removeItem("pls-consent"); } catch (e) {}
   document.getElementById("consent-msg").textContent = "Súhlas je zrušený.";
 });

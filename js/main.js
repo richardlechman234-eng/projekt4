@@ -6,7 +6,18 @@ import { calloutQuery, layoutCallouts, clearCallouts, resetCalloutBounds } from 
 // po obnovení stránky začni vždy hore pri garáži (prehliadač by inak skočil na posledné miesto / #kontakt)
 if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 if (location.hash && location.hash !== "#objednavka") history.replaceState(null, "", location.pathname + location.search);
+// návrat šípkou Späť (napr. z cookies): ak prehliadač stránku nemal v pamäti a načítal ju znova,
+// vrátime návštevníka tam, kde bol, a úvodnú jazdu preskočíme
+let backY = 0;
+try {
+  if (performance.getEntriesByType("navigation")[0]?.type === "back_forward") backY = Number(sessionStorage.getItem("pls-y")) || 0;
+} catch (e) {}
+addEventListener("pagehide", () => { try { sessionStorage.setItem("pls-y", String(Math.round(scrollY))); } catch (e) {} });
 scrollTo(0, 0);
+if (backY) {
+  const back = () => scrollTo(0, backY);
+  if (document.readyState === "complete") back(); else addEventListener("load", back, { once: true });
+}
 
 initUi();
 
@@ -130,7 +141,7 @@ async function load3d() {
         addEventListener("touchstart", gone, { once: true, capture: true, passive: true });
       } else setHint(ICON_ROTATE, touch ? "Ťuknite na bublinu · auto otočíte prstom" : "Kliknite na bublinu · auto otočíte myšou");
       hud(true);
-    }, { inside: mobile });
+    }, { inside: mobile, skip: backY > 0 });
     document.addEventListener("car-rotated", () => hint.classList.add("faded"), { once: true });
     new IntersectionObserver(([e]) => (e.isIntersecting ? api.resume() : api.pause())).observe(wrap);
     return api;

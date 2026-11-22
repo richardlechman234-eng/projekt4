@@ -98,6 +98,27 @@ function refreshSlots(form) {
   wrap.innerHTML = HOURS.map((h) => `<label><input type="radio" name="slot" value="${h}" ${ok ? "" : "disabled"} ${String(h) === prev ? "checked" : ""}><span>${h}:00</span></label>`).join("");
 }
 
+// lišta so súhlasom pri prvej návšteve: „Prijať všetko“ = povoliť mapu Google, „Iba nevyhnutné“ = nič od tretích strán
+function consentBar(loadMap) {
+  let has = null;
+  try { has = localStorage.getItem("pls-consent"); } catch (e) { has = "?"; }
+  if (has) return;
+  const bar = document.createElement("section");
+  bar.className = "consent-bar";
+  bar.setAttribute("aria-label", "Súhlas s cookies");
+  bar.innerHTML = `
+    <p><b>Cookies a súkromie.</b> Web používa len nevyhnutné úložisko v prehliadači. Mapa Google (tretia strana, môže ukladať vlastné cookies) sa načíta iba s vaším súhlasom. <a href="cookies.html">Viac o cookies</a></p>
+    <div class="cb-acts"><button class="btn line" type="button" data-c="necessary">Iba nevyhnutné</button><button class="btn o" type="button" data-c="all">Prijať všetko</button></div>`;
+  bar.addEventListener("click", (e) => {
+    const c = e.target.closest("[data-c]")?.dataset.c;
+    if (!c) return;
+    try { localStorage.setItem("pls-consent", c); if (c === "all") localStorage.setItem("pls-map", "1"); } catch (e) {}
+    if (c === "all") loadMap();
+    bar.remove();
+  });
+  document.body.appendChild(bar);
+}
+
 export function openBooking(serviceId = "servis") {
   if (svcDlg.open) svcDlg.close();
   bkDlg.innerHTML = bookingForm(serviceId);
@@ -250,6 +271,7 @@ export function initUi() {
     };
     try { if (localStorage.getItem("pls-map") === "1") load(); } catch (e) {}
     $("#map-ok", gate)?.addEventListener("click", () => { try { localStorage.setItem("pls-map", "1"); } catch (e) {} load(); });
+    consentBar(load);
   }
 
   // menu

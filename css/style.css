@@ -202,6 +202,11 @@ section.sec{padding:96px 0}
 
 /* ---------- mobilná lišta ---------- */
 .mbar{display:none}
+.consent-bar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:70;width:min(920px,calc(100% - 20px));display:flex;align-items:center;gap:20px;padding:16px 18px;background:var(--w);color:var(--k);border:2px solid var(--k);box-shadow:6px 6px 0 var(--o)}
+.consent-bar p{font-size:15px;line-height:1.45}
+.consent-bar a{color:var(--k);border-bottom:2px solid var(--o);text-decoration:none}
+.consent-bar .cb-acts{display:flex;gap:10px;flex:none}
+.consent-bar .btn{padding:11px 16px;font-size:15px}
 
 /* ---------- contact ---------- */
 .contact{background:var(--gr);border-top:2px solid var(--k)}
@@ -343,6 +348,9 @@ dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
   .bubble .lab{display:none}
 }
 @media(max-width:760px){
+  .consent-bar{flex-direction:column;align-items:stretch;gap:12px;bottom:calc(84px + env(safe-area-inset-bottom));padding:14px}
+  .consent-bar p{font-size:14px}
+  .consent-bar .cb-acts .btn{flex:1}
   body{font-size:17px}
   section.sec{padding:68px 0}
   nav>.btn{display:none}

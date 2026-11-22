@@ -359,7 +359,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
       kick();
     },
     // inside = mobil: bez jazdy cez vráta, iba natočenie auta v garáži
-    playIntro: (done, { inside = false } = {}) => { if (reduced) { done && done(); kick(); return; } intro = { t0: performance.now(), done, inside }; kick(); },
+    playIntro: (done, { inside = false, skip = false } = {}) => { if (reduced) { done && done(); kick(); return; } intro = { t0: skip ? -1e9 : performance.now(), done, inside }; kick(); },
     pause: () => { running = false; },
     resume: () => { running = true; kick(); },
     kick,
