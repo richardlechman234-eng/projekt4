@@ -49,8 +49,7 @@ function showStatic() {
     const el = document.createElement("button");
     el.type = "button";
     el.className = "bubble static-b" + (sv.big ? " big" : "");
-    el.setAttribute("aria-label", sv.title + " – zobraziť detail");
-    el.innerHTML = `<span class="dot">${sv.icon}</span><span class="lab"><span class="lf">${sv.title}</span><span class="ls">${sv.mob || sv.title}</span></span>`;
+    el.innerHTML = `<span class="dot">${sv.icon}</span><span class="lab"><span class="lf">${sv.title}</span><span class="ls">${sv.mob || sv.title}</span><span class="sr"> – zobraziť detail</span></span>`;
     el.addEventListener("click", () => showService(sv.id));
     const hl = (id) => { staticEls.forEach((b) => b.el.classList.toggle("hot", b.id === id)); document.dispatchEvent(new CustomEvent("svc-highlight", { detail: id })); };
     el.addEventListener("pointerenter", () => hl(sv.id));
@@ -166,7 +165,9 @@ if (!canWebgl) {
   // mobil: kým sa načíta 3D, je vidno obrázok s bublinami; potom hneď krátky úvod v garáži (bez tlačidla „Zobraziť v 3D“)
   showStatic(); hud(true); loader.classList.add("done");
   go3d && (go3d.hidden = true);
-  start3d();
+  // 3D až keď je stránka vykreslená a prehliadač má voľno – obrázok a texty sa zobrazia rýchlejšie
+  const idle = () => ("requestIdleCallback" in window ? requestIdleCallback(start3d, { timeout: 1500 }) : setTimeout(start3d, 300));
+  if (document.readyState === "complete") idle(); else addEventListener("load", idle, { once: true });
 } else {
   start3d();                                         // počítač: hneď úvodná jazda (kým sa načíta, je vidno fasádu)
 }

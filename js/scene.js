@@ -83,8 +83,7 @@ export async function createScene({ canvas, bubblesEl, onBubble, reduced }) {
     const el = document.createElement("button");
     el.type = "button";
     el.className = "bubble" + (s.big ? " big" : "");
-    el.setAttribute("aria-label", s.title + " – zobraziť detail");
-    el.innerHTML = `<span class="dot">${s.icon}</span><span class="lab"><span class="lf">${s.title}</span><span class="ls">${s.mob || s.title}</span></span>`;
+    el.innerHTML = `<span class="dot">${s.icon}</span><span class="lab"><span class="lf">${s.title}</span><span class="ls">${s.mob || s.title}</span><span class="sr"> – zobraziť detail</span></span>`;
     el.addEventListener("click", () => onBubble(s.id));
     // prejdenie myšou / fokus → zvýrazní bublinu
     el.addEventListener("pointerenter", () => highlight(s.id));

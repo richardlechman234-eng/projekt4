@@ -313,7 +313,7 @@ dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
 .legal ul{padding-left:22px}
 .legal table{border-collapse:collapse;width:100%;margin:12px 0}
 .legal td,.legal th{border:1px solid var(--line);padding:8px 10px;text-align:left;font-size:16px;vertical-align:top}
-.todo{background:#fff2a8;padding:0 4px;border-bottom:2px dashed #c49a00}
+.todo{background:#fff2a8;color:var(--k);padding:0 4px;border-bottom:2px dashed #c49a00}
 .legal .back{display:inline-block;margin-bottom:20px}
 
 /* ---------- responsive ---------- */
