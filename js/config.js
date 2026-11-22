@@ -23,7 +23,7 @@ window.PLS = {
   // napr. "https://script.google.com/macros/s/AKfy.../exec" – obsadené termíny sa skryjú, objednávka sa zapíše do kalendára a príde e-mail.
   // Alebo Formspree: založte formulár na formspree.io (zadarmo do 50 správ/mes.) a vložte jeho adresu,
   // napr. "https://formspree.io/f/abcdwxyz". Prázdne = objednávka sa dokončí cez telefón / WhatsApp / e-mail.
-  bookingEndpoint: "",
+  bookingEndpoint: "https://script.google.com/macros/s/AKfycbzXhnCAoN4o5oDeUKhczNlTrnbntoflUyoblX-EmdzzOAw2iAGxSH58-ONAPviu-TXj/exec",
 
   // WhatsApp (medzinárodný formát bez +). Prázdne = tlačidlo sa nezobrazí.
   whatsapp: "421902121221",
