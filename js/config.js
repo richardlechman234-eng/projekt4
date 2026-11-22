@@ -19,7 +19,9 @@ window.PLS = {
   // ------------------------------------------------------------------------------------
 
   // Odosielanie objednávok priamo z webu (bez e-mailového programu zákazníka).
-  // Formspree: založte formulár na formspree.io (zadarmo do 50 správ/mes.) a vložte jeho adresu,
+  // Google Kalendár (odporúčané): adresa webovej aplikácie z Google Apps Script (návod tools/booking/NAVOD.md),
+  // napr. "https://script.google.com/macros/s/AKfy.../exec" – obsadené termíny sa skryjú, objednávka sa zapíše do kalendára a príde e-mail.
+  // Alebo Formspree: založte formulár na formspree.io (zadarmo do 50 správ/mes.) a vložte jeho adresu,
   // napr. "https://formspree.io/f/abcdwxyz". Prázdne = objednávka sa dokončí cez telefón / WhatsApp / e-mail.
   bookingEndpoint: "",
 

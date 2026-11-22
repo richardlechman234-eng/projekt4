@@ -45,6 +45,14 @@ const HOURS = [8, 9, 10, 11, 12, 13, 14, 15];            // Po–Pi 8:00–16:00
 const pad = (n) => String(n).padStart(2, "0");
 const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const nextWorkday = () => { const d = new Date(); d.setDate(d.getDate() + 1); while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1); return d; };
+// rezervácie cez Google Kalendár (tools/booking/Code.gs): obsadené termíny sa načítajú z kalendára
+const GAS = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(CO.bookingEndpoint || "");
+let busy = {}, busyP = null;
+function loadBusy(force) {
+  if (!GAS) return Promise.resolve();
+  if (!busyP || force) busyP = fetch(CO.bookingEndpoint + "?action=busy").then((r) => r.json()).then((d) => { busy = d.busy || {}; }).catch(() => { busyP = null; });
+  return busyP;
+}
 const DAYS = ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"];
 const fmtDate = (s) => { const [y, m, d] = s.split("-").map(Number); const dt = new Date(y, m - 1, d); return `${DAYS[dt.getDay()]} ${d}. ${m}. ${y}`; };
 
@@ -95,7 +103,8 @@ function refreshSlots(form) {
   const d = date ? new Date(date + "T00:00:00") : null;
   const ok = d && d.getDay() !== 0 && d.getDay() !== 6;
   const prev = form.querySelector('input[name="slot"]:checked')?.value;
-  wrap.innerHTML = HOURS.map((h) => `<label><input type="radio" name="slot" value="${h}" ${ok ? "" : "disabled"} ${String(h) === prev ? "checked" : ""}><span>${h}:00</span></label>`).join("");
+  const taken = busy[date] || [];
+  wrap.innerHTML = HOURS.map((h) => { const t = taken.includes(h); return `<label${t ? ' title="Obsadené"' : ""}><input type="radio" name="slot" value="${h}" ${ok && !t ? "" : "disabled"} ${String(h) === prev && !t ? "checked" : ""}><span>${h}:00${t ? '<i class="sr"> – obsadené</i>' : ""}</span></label>`; }).join("");
 }
 
 // lišta so súhlasom pri prvej návšteve: „Prijať všetko“ = povoliť mapu Google, „Iba nevyhnutné“ = nič od tretích strán
@@ -125,6 +134,7 @@ export function openBooking(serviceId = "servis") {
   bkDlg.setAttribute("aria-labelledby", "book-title");
   const form = $("#book-form", bkDlg);
   refreshSlots(form);
+  loadBusy().then(() => { if (form.isConnected) refreshSlots(form); });
   $("#f-date", form).addEventListener("change", () => { refreshSlots(form); $("#f-date", form).closest(".f").classList.remove("bad"); });
   form.addEventListener("submit", (e) => { e.preventDefault(); submit(form); });
   if (!bkDlg.open) bkDlg.showModal();
@@ -162,6 +172,8 @@ function submit(form) {
   try { const last = Number(sessionStorage.getItem("pls-sent") || 0); if (Date.now() - last < 60000) return showSent(o, true); } catch (e) {}
   const btn = form.querySelector('button[type="submit"]');
   btn.disabled = true; btn.textContent = "Odosielam…";
+  if (GAS) return sendGas(form, o, btn, { sluzba: svc, date: v("date"), hour: Number(slot.value), meno: v("name"), telefon: v("tel"),
+    email: v("mail"), vozidlo: v("car"), spz: v("spz"), poznamka: v("note"), web: v("web") });
   fetch(CO.bookingEndpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -172,6 +184,28 @@ function submit(form) {
     try { sessionStorage.setItem("pls-sent", String(Date.now())); } catch (e) {}
     showSent(o, false);
   }).catch(() => showDone(o, true));
+}
+
+// Google Apps Script: text/plain → bez CORS predletu; odpoveď { ok } alebo { ok:false, error }
+function sendGas(form, o, btn, data) {
+  const reset = () => { btn.disabled = false; btn.textContent = "Odoslať objednávku"; };
+  fetch(CO.bookingEndpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) })
+    .then((r) => r.json())
+    .then((res) => {
+      if (res.ok) { try { sessionStorage.setItem("pls-sent", String(Date.now())); } catch (e) {} busyP = null; return showSent(o, false); }
+      if (res.error === "again") return showSent(o, true);
+      if (res.error === "taken") {
+        reset();
+        return loadBusy(true).then(() => {
+          refreshSlots(form);
+          const f = $("#slots", form).closest(".f");
+          $("#e-slot", form).textContent = "Tento čas si medzitým niekto rezervoval. Vyberte iný.";
+          f.classList.add("bad"); $("#slots input:not(:disabled)", form)?.focus();
+        });
+      }
+      throw new Error(res.error || "chyba");
+    })
+    .catch(() => showDone(o, true));
 }
 
 function showSent(o, again) {
