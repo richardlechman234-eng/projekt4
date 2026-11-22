@@ -253,8 +253,8 @@ function showSent(o, again) {
       <p class="eyebrow">${again ? "Už odoslané" : "Hotovo"}</p>
       <h3 id="book-title">${again ? "Objednávku sme už dostali" : "Objednávka odoslaná"}</h3>
       <p>${again ? "Pred chvíľou ste nám poslali objednávku. Ak chcete niečo zmeniť, zavolajte nám." : "Ďakujeme. Termín vám potvrdíme telefonicky alebo e-mailom, zvyčajne v ten istý pracovný deň."}</p>
+      ${calBox(o)}
       <div class="row">
-        <button class="btn o" type="button" id="ics">Pridať do kalendára (.ics)</button>
         <a class="btn line" href="tel:${esc(CO.phoneHref)}">Zavolať ${esc(CO.phone)}</a>
         <button class="btn line" type="button" data-close>Zavrieť</button>
       </div>
@@ -279,8 +279,9 @@ function showDone(o, failed = false) {
         <a class="btn ${wa ? "line" : "o"}" href="tel:${esc(CO.phoneHref)}">Zavolať ${esc(CO.phone)}</a>
         ${to ? `<a class="btn line" href="${mailto}">Poslať e-mailom</a>` : ""}
         <button class="btn line" type="button" id="bk-copy">Kopírovať text</button>
-        <button class="btn line" type="button" id="ics">Do kalendára (.ics)</button>
+
       </div>
+      ${calBox(o)}
       <p class="note-s">Termín je záväzný až po našom potvrdení.</p>
     </div>`;
   $("#ics", bkDlg).addEventListener("click", () => downloadIcs(o));
@@ -290,6 +291,21 @@ function showDone(o, failed = false) {
   });
 }
 
+// pridanie termínu do kalendára návštevníka – bez ďalšieho e-mailu: Google (odkaz) alebo iPhone / Outlook (.ics)
+const calTitle = (o) => `${CO.name || "PLS GROUP"} – ${o.svc}`;
+const calNote = "Termín je záväzný až po potvrdení servisom." + (CO.phone ? ` Tel. ${CO.phone}` : "");
+function gcalUrl(o) {
+  const [y, m, d] = o.date.split("-").map(Number), h = Number(o.hour);
+  const f = (H) => `${y}${pad(m)}${pad(d)}T${pad(H)}0000`;
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(calTitle(o)) +
+    `&dates=${f(h)}/${f(h + 1)}&ctz=Europe/Bratislava&location=` + encodeURIComponent(CO.address || "") + "&details=" + encodeURIComponent(calNote);
+}
+function calBox(o) {
+  return `<div class="calbox"><p><b>Pridajte si termín do kalendára v mobile</b>, aby ste naň nezabudli.</p>
+    <div class="row"><a class="btn o" href="${esc(gcalUrl(o))}" target="_blank" rel="noopener noreferrer">Google Kalendár</a>
+    <button class="btn line" type="button" id="ics">iPhone / Outlook</button></div></div>`;
+}
+
 function downloadIcs(o) {
   const [y, m, d] = o.date.split("-").map(Number);
   const h = Number(o.hour);
@@ -297,11 +313,13 @@ function downloadIcs(o) {
   const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PLS GROUP//objednavka//SK", "BEGIN:VEVENT",
     `UID:${Date.now()}@plsgroup`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
     `DTSTART;TZID=Europe/Bratislava:${f(h)}`, `DTEND;TZID=Europe/Bratislava:${f(h + 1)}`,
-    `SUMMARY:Servis – ${o.svc} (${CO.name || "PLS GROUP"})`, `LOCATION:${CO.address || ""}`,
-    "DESCRIPTION:Termín je záväzný až po potvrdení servisom.", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    `SUMMARY:${calTitle(o)}`, `LOCATION:${(CO.address || "").replace(/,/g, "\,")}`, `DESCRIPTION:${calNote.replace(/,/g, "\,")}`,
+    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", `DESCRIPTION:${calTitle(o)}`, "END:VALARM",
+    "BEGIN:VALARM", "TRIGGER:-PT1H", "ACTION:DISPLAY", `DESCRIPTION:${calTitle(o)}`, "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
-  a.download = "objednavka-servis.ics";
+  a.download = "termin-servis.ics";
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }

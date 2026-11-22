@@ -324,6 +324,8 @@ dialog.side.left[open]{animation:slideleft .35s cubic-bezier(.2,.8,.2,1)}
 .slots input:focus-visible+span{outline:3px solid var(--o)}
 .slots input:disabled+span{background:#eee;color:#777;border-color:#bbb;cursor:not-allowed;padding:4px 0}
 .done{padding:34px}
+.calbox{margin:18px 0 6px;padding:16px;border:2px solid var(--k);background:#fff6f1;box-shadow:5px 5px 0 var(--o)}
+.calbox p{font-size:16px;margin-bottom:12px}
 .done h3{font-size:42px;margin:10px 0}
 .done pre{white-space:pre-wrap;font-family:var(--body);background:#f3f3f3;border:2px solid var(--k);padding:14px;margin:14px 0;font-size:16px}
 .note-s{font-size:14px;opacity:.75;margin-top:12px}
